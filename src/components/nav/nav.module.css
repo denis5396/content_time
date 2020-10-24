@@ -1,0 +1,75 @@
+#nav ul li {
+  color: #333;
+  padding: 1rem 2rem;
+}
+#nav ul li a {
+  color: #fff;
+  font-family: 'Montserrat';
+  font-size: 1.4rem;
+  text-transform: uppercase;
+}
+#nav {
+  display: flex;
+}
+#nav button {
+  margin-top: 1.5rem;
+  margin-left: 1rem;
+  background: transparent;
+  outline: none;
+  border: none;
+  height: fit-content;
+  background: transparent;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+}
+#nav button i {
+  color: #3e52b5;
+  font-size: 4rem;
+}
+#navBody {
+  padding-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100px;
+  background-color: inherit;
+}
+#title {
+  font-size: 2rem;
+  color: red;
+}
+#logo {
+  padding: 0.5rem;
+  border-radius: 50%;
+  background-color: aqua;
+  width: 5rem;
+  height: 5rem;
+}
+.current {
+  color: aqua !important;
+}
+#nav ul {
+  list-style-type: none;
+  display: flex;
+  width: 50%;
+  margin: auto;
+  justify-content: center;
+  align-items: center;
+}
+
+#activeLine {
+  margin-left: 5rem;
+  width: 52rem;
+  height: 10px;
+  justify-self: center;
+  align-self: center;
+}
+
+#activeSlider {
+  margin-left: 0.2rem;
+  width: 6rem;
+  height: 50%;
+  border-radius: 10px;
+  background-color: aqua;
+  transition: transform 0.5s ease;
+}
