@@ -5,7 +5,6 @@ import s from './nav.module.css'
 
 const Nav = () => {
   const {user, setUser} = useContext(UserContext)
-  console.log(user)
   const active = useRef(null);
   const news = useRef(null)
   const home = useRef(null)

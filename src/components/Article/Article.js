@@ -1,4 +1,6 @@
 import React, {useRef, useEffect, useState} from 'react'
+import { db } from '../../firebase'
+import {Link} from 'react-router-dom'
 import s from './Article.module.css'
 
 const Article = (props) => {
@@ -20,6 +22,7 @@ const Article = (props) => {
   useEffect(() => {
     document.addEventListener("mousedown", handleClick);
 
+    
     return () => {
       document.removeEventListener("mousedown", handleClick);
     };
@@ -34,24 +37,41 @@ const Article = (props) => {
       } else {
         rCO.current.style.display = 'flex'
       }
-    } else if(strVal.includes('mainBox')){
+    } else if(strVal.includes('mainBox') || strVal.includes('articleImg') || strVal.includes('o') || strVal.includes('x') || strVal.includes('triangle') || strVal.includes('square')){
       rCO.current.style.display = 'none'
     }
   }
   
+  const deleteArticleHandler = (articleId) => {
+
+    const articleIds = props.ids.articleIds
+    console.log(articleIds)
+    articleIds.forEach((art,idx) => {
+      if(art === articleId){
+        articleIds.splice(idx, 1)
+      }
+    })
+    console.log(articleIds)
+    props.ids.setArticleIds([...articleIds])
+    props.ids.setArticleRemoved(true)
+
+    const projectRef= db.ref(`/content/${articleId}`);
+    projectRef.remove()
+    // console.log(projectRef)
+  }
 
   return (
     <div id={s.mainBox} style={{backgroundColor: props.category === 'sports' ? '#ffc000' : props.category === 'lifestyle' ? '#673ab7' : props.category === 'news' ? '#ff005c' : props.category === 'technology' ? '#07b0d7' : ''}} ref={articleBox} onClick={(e) => openOptions(e)}>
       {open && (<span id={s.rCO} ref={rCO}>
-        <span>Delete Article<i class="fas fa-trash-alt"></i></span>
-        <span>Edit Article<i class="fas fa-edit"></i></span>
+        <span onClick={() => deleteArticleHandler(props.uId)}>Delete Article<i class="fas fa-trash-alt"></i></span>
+        <Link to={`/article/${props.uId}`}><span>Edit Article<i class="fas fa-edit"></i></span></Link>
       </span>)}
       <span id={s.optionsParent} ref={optionsParent} >
         <span id={s.options} />
         <span id={s.o1} />
         <span id={s.o2} />
       </span>
-      <img src={props.imageUrl} id={s.articleImg}/>
+      <img src={props.imageUrl[0]} id={s.articleImg}/>
       <span id={s.boxTitle}>
         <span id={s.line} style={{backgroundColor: props.category === 'sports' ? '#4b3808' : props.category === 'technology' ? '#063d58' : ''}}/>
         <span id={s.title}>

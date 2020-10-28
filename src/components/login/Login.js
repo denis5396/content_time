@@ -145,7 +145,7 @@ const Login = () => {
         for( let userId in data) {
           console.log(data[userId].password)
           if(data[userId].username === usernameValue && data[userId].password === passwordValue){
-            setUser(userId)
+            setUser(usernameValue)
             circle.current.style.transform = 'translateX(-5rem)'
             circle.current.style.opacity = '0'
             triangle.current.style.transform = 'translateX(-5rem)'
@@ -422,14 +422,14 @@ const Login = () => {
         <li class={s.bgLine}></li>
         <li class={s.bgLine}></li>
       </ul>
-      <form ref={form} onSubmit={(e) => e.preventDefault()}>
+      <form ref={form} id={s.form} onSubmit={(e) => e.preventDefault()}>
         <span id={s.fl} />
         <h3>Sign In</h3>
         <label htmlFor='username' id={s.userName} ref={input1}>Username</label>
         <input type="text" onChange={() => onChangeHandler(input11.current.value)} ref={input11} onFocus={(e) => onInputFocus(e, input11)} onBlur={() => onInputBlur(input1)} name="username" />
         <label htmlFor='password' ref={input2} >Password</label>
         <input type="password" onChange={() => onChangeHandler(input21.current.value)} ref={input21} name="password" onFocus={(e) => onInputFocus(e, input21)} onBlur={() => onInputBlur(input2)}  />
-        <input type="Submit" value="Sign In" onClick={handleSignIn} ref={signInBtn}/>
+        <input type="Submit" readOnly="Sign In" onClick={handleSignIn} ref={signInBtn}/>
         <label>-or-</label>
         <button onClick={createAccountHandler} ref={accCreationBtn}>Create an Account</button>
     <div id={finished ? s.i2a : s.i1a} ref={i1a}><i class={finished ? 'fas fa-check-square' : 'fas fa-exclamation-circle'}></i><span ref={inputHtml}>Please enter a username that is at least 3 characters long</span></div>

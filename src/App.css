@@ -3,7 +3,8 @@ html {
   font-size: 10px;
   -webkit-tap-highlight-color: transparent;
 }
-html,body {
+html,
+body {
   overflow-x: hidden;
 }
 .App {
@@ -15,6 +16,10 @@ html,body {
   box-sizing: border-box;
   font-family: 'Montserrat';
 }
+.hidden-scrollbar::-webkit-scrollbar {
+  visibility: hidden;
+}
+
 ul li {
   list-style-type: none;
 }

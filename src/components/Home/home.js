@@ -24,43 +24,88 @@ const Home = () => {
   const bgParent = useRef()
 
   const [init, setInit] = useState(true)
-  const [image, setImage] = useState(null)
-  const [imageUrl, setImageUrl] = useState(null)
-  const [article, setArticle] = useState({title: '', subTitle: '', category: '', imageUrl: '', text: ''})
+  const [image, setImage] = useState([])
+  const [imageUrl, setImageUrl] = useState([])
+  const [urlHere, setUrlHere] = useState(false)
+  const [article, setArticle] = useState({title: '', subTitle: '', category: '', imageUrl: [], text: ''})
   const [ready, setReady] = useState(false)
   const [loading, setLoading] = useState(false)
   // get articles
   const [articles, setArticles] = useState([])
   const [freeToGet, setFreeToGet] = useState(false)
   const [disableSpinner, setDisableSpinner] = useState(true)
+  const [articleIds, setArticleIds] = useState([])
+  const [articleRemoved, setArticleRemoved] = useState(false)
 
   const getArticles =  () => {
     fetch('https://contenttime-90543.firebaseio.com/content.json')
     .then(response => response.json())
     .then(data => {
-      console.log(data)
-      console.log(articles.length)
       if(data){
         const keys = Object.keys(data)
-        if(articles.length === 0){
+        let dataArray = []
+        setArticleIds([...keys])
+        if(articles.length === 0 ){
+          setArticleRemoved(false)
           for(let id in data){
-            console.log(data[id]) 
-            setArticles(oldArray => [...oldArray, data[id]])
+            // console.log(data[id])
+            dataArray = [{...data[id], uId: id}]
+            // console.log(dataArray)
+            setArticles(oldArray => [...oldArray, dataArray[0]])
           }
         }
         else if(articles.length > 0) {
-          setArticles(oldArray => [...oldArray, data[keys[keys.length - 1]]])
+          dataArray = [{...data[keys[keys.length - 1]], uId: keys[keys.length - 1]}]
+          if(!articleRemoved){
+            setArticles(oldArray => [...oldArray, dataArray[0]])
+          } else if(articleRemoved){
+            let newOldArray = []
+            let count = 0;
+            console.log(articleIds.length)
+            console.log(articles)
+            for(let i = 0; i < articles.length; i++){
+              for(let j = 0; j < articleIds.length; j++){
+                if(articles[i].uId === articleIds[j] ){
+                  newOldArray[count] = {...articles[i]}
+                  // console.log(oldArray[i].uId)
+                  count += 1;
+                }
+              }
+            }
+            setArticles([...newOldArray])
+            setArticleRemoved(false)
+          }
         }
+      }
+      else if(!data){
+        setArticles([])
       }
     }).then(success => {
       setDisableSpinner(false)
+      setUrlHere(false)
     })
   }
 
   useEffect(() => {
+    if(image){
+      console.log(image)
+    }
+  }, [image])
+
+  useEffect(() => {
+    if(articleRemoved){
+      getArticles()
+    }
+  }, [articleRemoved])
+  useEffect(() => {
+    if(articles) {
+      console.log(articles)
+    }
+  }, [articles])
+  useEffect(() => {
     getArticles()
-    
   }, [])
+
   useEffect(() => {
     if(loading){
       articleSpinner.current.style.opacity = '1'
@@ -73,12 +118,22 @@ const Home = () => {
       getArticles()
       setFreeToGet(false)
       resetFields()
+      setImageUrl([])
     }
   }, [freeToGet])
 
   useEffect(() => {
-    if(ready) {
-      article.imageUrl = imageUrl
+    console.log(imageUrl)
+    if(ready && imageUrl.length !== 0 && urlHere) {
+      if(imageUrl.length === 1){
+        alert('1')
+        article.imageUrl[0] = imageUrl[0]
+      } else {
+        imageUrl.forEach((url, idx) => {
+          article.imageUrl[idx] = url
+        })
+      }
+      alert('poslije1')
       console.log(article)
       fetch('https://contenttime-90543.firebaseio.com/content.json', {
         method: 'POST',
@@ -97,7 +152,7 @@ const Home = () => {
         }, 1500)
         setTimeout(() => {
           spinnerParent.current.style.zIndex = '-1'
-        }, 2000)
+        }, 1600)
         setFreeToGet(true)
       })
       .then(article => {
@@ -108,6 +163,7 @@ const Home = () => {
       });
     }
   }, [imageUrl])
+
   labels = undefined;
   inputs = undefined;
     if (!labels) {
@@ -174,7 +230,7 @@ const Home = () => {
       if(bool) {
         spinnerParent.current.style.display = 'block'
         spinnerParent.current.style.zIndex = '12'
-        setArticle({title: inputs[0].value, subTitle: inputs[1].value, category: selectValue.current.value, imageUrl: '', text: inputs[3].value })
+        setArticle({title: inputs[0].value, subTitle: inputs[1].value, category: selectValue.current.value, imageUrl: [], text: inputs[3].value })
         handleUpload()
         setReady(true)
         setLoading(true)
@@ -191,38 +247,81 @@ const Home = () => {
     // firebase img upload
     const handleChange = (e) => {
       alertNoImg.current.style.display='none'
-      if(e.target.files[0]) {
-        setImage(e.target.files[0])
+      const {files} = e.target
+      const arr = []
+      let count = 0;
+      if(files) {
+        for(let file in files){
+          console.log(files[file])
+          if(count < files.length){
+            arr.push(files[file])
+          }
+          count++
+        }
+        setImage(arr)
+        console.log(arr)
       }
     }
 
     const handleUpload =  () => {
       if(image){
-        const uploadTask = storage.ref(`images/${image.name}`).put(image)
-      uploadTask.on(
-        'state_changed',
-        snapshot => {},
-        error => {
-          console.log(error)
-        },
-        () => {
-          storage
-            .ref('images')
-            .child(image.name)
-            .getDownloadURL()
-            .then(url => {
-              setImageUrl(url)
-            })
+        console.log(image)
+        if(image.length > 1){
+          image.forEach(img => {
+            const uploadTask = storage.ref(`images/${img.name}`).put(img)
+            uploadTask.on(
+              'state_changed',
+              snapshot => {},
+              error => {
+                console.log(error)
+              },
+              () => {
+                storage
+                  .ref('images')
+                  .child(img.name)
+                  .getDownloadURL()
+                  .then(url => {
+                    setImageUrl(prevUrl => {
+                      return [...prevUrl, url]
+                    })
+                    setUrlHere(true)
+                  })
+              }
+            )
+          })
+        } else {
+            const uploadTask = storage.ref(`images/${image[0].name}`).put(image[0])
+            uploadTask.on(
+              'state_changed',
+              snapshot => {},
+              error => {
+                console.log(error)
+              },
+              () => {
+                storage
+                  .ref('images')
+                  .child(image[0].name)
+                  .getDownloadURL()
+                  .then(url => {
+                    setUrlHere(true)
+                    setImageUrl([url])
+                  })
+              }
+            )
         }
-      )
       }
     }
 
     const handleAddArticle = () => {
-      disableScroll()
+
       document.querySelector('html').style.scrollBehavior = 'smooth'
-      window.scrollTo(0, 0)
-      document.querySelector('html').style.overflowY = 'hidden'
+      setTimeout(() => {
+        window.scrollTo(0, 0)
+      }, 10)
+      // bgParent.current.style.overflowY = 'hidden'
+
+      disableScroll()
+      // bgParent.current.style.overflowY = 'hidden'
       articleForm.current.style.transform = 'translate(-50%, -50%)'
       articleForm.current.style.opacity = '1'
       articleForm.current.style.zIndex = '11'
@@ -231,7 +330,6 @@ const Home = () => {
 
     const closeEverything = () => {
       enableScroll()
-      document.querySelector('html').style.overflowY = 'scroll'
       articleForm.current.style.opacity = 0
       articleForm.current.style.transform = 'translate(-50%, -100%)'
       articleForm.current.style.zIndex = -1;
@@ -271,7 +369,8 @@ const Home = () => {
   }
 
   return (
-    <div id={s.bg} ref={bgParent}>
+    <div id={s.bgMain}>
+      <div id={s.bg} ref={bgParent}>
       <div id={s.overlay} ref={overlay} onClick={closeEverything}/>
       <div id={s.spinnerParent} ref={spinnerParent}>
       {loading ? <div id={s.articleSpinner} ref={articleSpinner}></div> : <div id={s.articleUploaded} ref={articleUploadText}><i className="fas fa-check"></i>Your article has been created!</div>}
@@ -310,7 +409,7 @@ const Home = () => {
           if(inputs.length < 4 && input && init) {
             inputs.push(input)
           }
-        }} type="file" id={s.imgUpload} name="img" accept="image/*"/>
+        }} type="file" id={s.imgUpload} name="img" accept="image/*" multiple={true}/>
         <span id={s.showNoImg} ref={alertNoImg}>Please upload an image.</span>
         <label htmlFor="textarea">Insert the text for your article:</label>
         <textarea onFocus={(e) => {
@@ -333,185 +432,186 @@ const Home = () => {
             <button id={s.addArticle} onClick={handleAddArticle}>+</button>
             {!disableSpinner ? (<div id={s.addedArticles}>
               {articles ? articles.map(art => 
-                 (<Article key={uuid()} title={art.title} subTitle={art.subTitle} category={art.category} imageUrl={art.imageUrl} text={art.text} /> )
+                 (<Article ids={{articleIds, setArticleIds, setArticleRemoved}} uId={art.uId} key={uuid()} title={art.title} subTitle={art.subTitle} category={art.category} imageUrl={art.imageUrl} text={art.text} /> )
               ) : null}
             </div>) : (<div id={s.preLoad}></div>)}
           </div>
         </div>
       </section>
-      <ul id={s.bgLines}>
-        <li class={s.bgLine}></li>
-        <li class={s.bgLine}></li>
-        <li class={s.bgLine}></li>
-        <li class={s.bgLine}></li>
-        <li class={s.bgLine}></li>
-        <li class={s.bgLine}></li>
-        <li class={s.bgLine}></li>
-        <li class={s.bgLine}></li>
-        <li class={s.bgLine}></li>
-        <li class={s.bgLine}></li>
-        <li class={s.bgLine}></li>
-      </ul>
-      <ul id={s.bgLines2}>
-        <li class={s.bgLine}></li>
-        <li class={s.bgLine}></li>
-        <li class={s.bgLine}></li>
-        <li class={s.bgLine}></li>
-        <li class={s.bgLine}></li>
-        <li class={s.bgLine}></li>
-        <li class={s.bgLine}></li>
-      </ul>
-      <ul id={s.bgLines3}>
-        <li class={s.bgLine}></li>
-        <li class={s.bgLine}></li>
-        <li class={s.bgLine}></li>
-        <li class={s.bgLine}></li>
-      </ul>
-      <span id={s.triangleP}>
-        <span id={s.triangleH} />
-        <span id={s.triangleInH} />
-      </span>
+         <ul id={s.bgLines}>
+         <li class={s.bgLine}></li>
+         <li class={s.bgLine}></li>
+         <li class={s.bgLine}></li>
+         <li class={s.bgLine}></li>
+         <li class={s.bgLine}></li>
+         <li class={s.bgLine}></li>
+         <li class={s.bgLine}></li>
+         <li class={s.bgLine}></li>
+         <li class={s.bgLine}></li>
+         <li class={s.bgLine}></li>
+         <li class={s.bgLine}></li>
+       </ul>
+       <ul id={s.bgLines2}>
+         <li class={s.bgLine}></li>
+         <li class={s.bgLine}></li>
+         <li class={s.bgLine}></li>
+         <li class={s.bgLine}></li>
+         <li class={s.bgLine}></li>
+         <li class={s.bgLine}></li>
+         <li class={s.bgLine}></li>
+       </ul>
+       <ul id={s.bgLines3}>
+         <li class={s.bgLine}></li>
+         <li class={s.bgLine}></li>
+         <li class={s.bgLine}></li>
+         <li class={s.bgLine}></li>
+       </ul>
+       <span id={s.triangleP}>
+         <span id={s.triangleH} />
+         <span id={s.triangleInH} />
+       </span>
 
-      <span id={s.squareH}>
-        <span id={s.squareHideH} />
-        <ul>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-        </ul>
-      </span>
-      <span id={s.xH}>
-        <span id={s.x1H} />
-        <span id={s.x2H} />
-        <span id={s.x3H} />
-        <span id={s.x4H} />
-        <span id={s.x5H} />
-        <span id={s.x6H} />
-        <span id={s.x7H} />
-        <span id={s.x8H} />
-        <ul>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-        </ul>
-      </span>
+       <span id={s.squareH}>
+         <span id={s.squareHideH} />
+         <ul>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+         </ul>
+       </span>
+       <span id={s.xH}>
+         <span id={s.x1H} />
+         <span id={s.x2H} />
+         <span id={s.x3H} />
+         <span id={s.x4H} />
+         <span id={s.x5H} />
+         <span id={s.x6H} />
+         <span id={s.x7H} />
+         <span id={s.x8H} />
+         <ul>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+           <li></li>
+         </ul>
+       </span>
+    </div>
     </div>
   )
 }

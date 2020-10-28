@@ -91,7 +91,7 @@
   color: #fff;
   transition: color 0.2s ease-in;
 }
-#rCO span:nth-of-type(2) {
+#rCO a span {
   background-color: transparent;
   border: 0.1rem solid #156ea0;
   color: #156ea0;
@@ -103,15 +103,15 @@
 #rCO span:nth-of-type(1):hover i {
   color: #ff005c;
 }
-#rCO span:nth-of-type(2):hover i {
-  color: #156ea0;
+#rCO a span:hover i {
+  color: #156ea0 !important;
 }
 #rCO span:nth-of-type(1):hover {
   background-color: #ff005c;
   color: #fff;
 }
-#rCO span:nth-of-type(2):hover {
-  background-color: #156ea0;
+#rCO a span:hover {
+  background-color: #156ea0 !important;
   color: #fff;
 }
 
