@@ -22,9 +22,10 @@ const ArticleSite = () => {
 
   const [commentsState, setCommentsState] = useState([]);
   const [commentsResp, setCommentsResp] = useState([]);
+  const [trigger, setTrigger] = useState(false);
 
   const [arr, setArr] = useState([]);
-
+  const [ky, setKy] = useState('');
   useEffect(() => {
     if (commentsState) {
       console.log(commentsState);
@@ -33,14 +34,24 @@ const ArticleSite = () => {
   useEffect(() => {
     if (commentsResp.length > 0) {
       console.log(commentsResp);
-      saveComment();
-      console.log(commentsState);
+      let newArr = [];
+      commentsState.forEach((cs) => {
+        newArr[0] = {};
+        newArr[0].ky = cs.ky;
+        newArr[0].user = cs.user;
+        newArr[0].text = cs.text;
+        newArr[0].response = [...commentsResp];
+      });
+      setCommentsState(newArr);
+      setTrigger(true);
     }
   }, [commentsResp]);
   const saveComment = () => {
     const text = commentEnter.current.value;
+    const id = uuid();
+    setKy(id);
     setCommentsState((prevCom) => {
-      return [...prevCom, { user, text, response: [commentsResp] }];
+      return [...prevCom, { ky: id, user, text, response: [] }];
     });
   };
 
@@ -373,13 +384,16 @@ const ArticleSite = () => {
                     return (
                       <MainComment
                         key={uuid()}
+                        ky={ky}
                         usr={comm.user}
                         txt={comm.text}
                         rsp={comm.response} //odgovori
                         setRsp={{
+                          trigger,
                           commentsState,
                           commentsResp,
                           setCommentsResp,
+                          setCommentsState,
                         }}
                       />
                     );
