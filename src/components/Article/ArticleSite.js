@@ -6,7 +6,7 @@ import s from './ArticleSite.module.css';
 import MainComment from './comments/MainComment';
 
 const ArticleSite = () => {
-  const { user } = useContext(UserContext);
+  const { user, setUser } = useContext(UserContext);
   console.log(user);
   const progressBar = useRef();
   const scrollHeightOne = useRef();
@@ -25,43 +25,20 @@ const ArticleSite = () => {
   const [trigger, setTrigger] = useState(false);
 
   const [arr, setArr] = useState([]);
-  const [ky, setKy] = useState('');
-  useEffect(() => {
-    if (commentsState) {
-      console.log(commentsState);
-    }
-  }, [commentsState]);
-  useEffect(() => {
-    if (commentsResp.length > 0) {
-      console.log(commentsResp);
-      let newArr = [];
-      commentsState.forEach((cs) => {
-        newArr[0] = {};
-        newArr[0].ky = cs.ky;
-        newArr[0].user = cs.user;
-        newArr[0].text = cs.text;
-        newArr[0].response = [...commentsResp];
-      });
-      setCommentsState(newArr);
-      setTrigger(true);
-    }
-  }, [commentsResp]);
-  const saveComment = () => {
-    const text = commentEnter.current.value;
-    const id = uuid();
-    setKy(id);
-    setCommentsState((prevCom) => {
-      return [...prevCom, { ky: id, user, text, response: [] }];
-    });
-  };
+  const [ky, setKy] = useState([]);
 
   let url = undefined;
+  let queryParam = '';
   let imageUrls = [];
   useEffect(() => {
+    if (localStorage.getItem('userName')) {
+      const usr = JSON.parse(localStorage.getItem('userName'));
+      setUser(usr);
+    }
     handleScroll();
     console.log(thumbImgs);
     url = window.location.href;
-    let queryParam = '';
+    queryParam = '';
     let bool = false;
     for (let i = 0; i < url.length; i++) {
       if (url[i] === '-') {
@@ -77,6 +54,11 @@ const ArticleSite = () => {
       var key = snapshot.key; // "ada"
       console.log(key);
       const arr = snapshot.child(`imageUrl`).val();
+      const arrCom = snapshot.child(`comments`).val();
+      console.log(arrCom);
+      if (arrCom) {
+        setCommentsState(arrCom);
+      }
       console.log(arr);
       arr.forEach((img, idx) => {
         console.log(img);
@@ -94,6 +76,86 @@ const ArticleSite = () => {
     console.log(url);
     //  scrollOffset.current.style.scrollBehavior = 'smooth'
   }, []);
+
+  useEffect(() => {
+    if (commentsState.length > 0) {
+      console.log(commentsState);
+      url = window.location.href;
+      queryParam = '';
+      let bool = false;
+      for (let i = 0; i < url.length; i++) {
+        if (url[i] === '-') {
+          bool = true;
+          queryParam += url[i];
+        } else if (bool) {
+          queryParam += url[i];
+        }
+      }
+      if (queryParam) {
+        var ref = db.ref('content/' + '' + queryParam + '');
+        console.log(ref);
+        ref
+          .update({
+            comments: commentsState,
+          })
+          .then((res) => {
+            var ref = db.ref('content/' + '' + queryParam + '');
+            console.log(ref);
+            ref.once('value').then(function (snapshot) {
+              var key = snapshot.key; // "ada"
+              console.log(key);
+              const arr = snapshot.child(`comments`).val();
+              console.log(arr);
+              // setCommentsState(arr);
+            });
+          }); //arrived on backend
+      }
+    }
+  }, [commentsState]);
+  useEffect(() => {
+    if (commentsResp.length > 0) {
+      console.log(commentsResp);
+      let newArr = [];
+      let respArr = [];
+      let respArr2 = [];
+
+      commentsState.forEach((cs, idx) => {
+        newArr[idx] = {};
+        newArr[idx].response = [];
+        newArr[idx].ky = cs.ky;
+        newArr[idx].user = cs.user;
+        newArr[idx].text = cs.text;
+        newArr[idx].like = 0;
+        newArr[idx].dislike = 0;
+        let cnt = 0;
+        commentsResp.forEach((cR, idxx) => {
+          if (cR.ky === cs.ky) {
+            console.log(respArr);
+            newArr[idx].response[cnt] = {};
+            newArr[idx].response[cnt].ky = cR.ky;
+            newArr[idx].response[cnt].user = cR.user;
+            newArr[idx].response[cnt].text = cR.text;
+            newArr[idx].response[cnt].like = 0;
+            newArr[idx].response[cnt].dislike = 0;
+            cnt += 1;
+          }
+        });
+        // newArr[idx].response = [...respArr];
+      });
+      setCommentsState(newArr);
+      setTrigger(true);
+    }
+  }, [commentsResp]);
+  const saveComment = () => {
+    const text = commentEnter.current.value;
+    const id = uuid();
+    setKy((prev) => {
+      return [...prev, id];
+    });
+    setCommentsState((prevCom) => {
+      return [...prevCom, { ky: id, user, text, response: [] }];
+    });
+  };
 
   useEffect(() => {
     if (arr && thumbImgs[0]) {
@@ -384,7 +446,7 @@ const ArticleSite = () => {
                     return (
                       <MainComment
                         key={uuid()}
-                        ky={ky}
+                        ky={comm.ky}
                         usr={comm.user}
                         txt={comm.text}
                         rsp={comm.response} //odgovori
