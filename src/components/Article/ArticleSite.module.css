@@ -496,6 +496,17 @@ img {
   grid-template-columns: 1fr 5fr;
   grid-template-rows: auto auto 1fr;
 }
+.userResponse .comments {
+  position: relative;
+}
+.userResponse .comments::before {
+  position: absolute;
+  content: '';
+  left: -5%;
+  height: 100%;
+  width: 0.1rem;
+  background-color: #293042;
+}
 #commentBody {
   padding-top: 2rem;
   display: flex;

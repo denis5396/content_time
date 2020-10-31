@@ -7,6 +7,7 @@ function MainComment({ ky, rsp, usr, txt, setRsp }) {
   const { user } = useContext(UserContext);
   let commentsParent = useRef();
   const reply = useRef();
+  const comPar = useRef();
   const respondBox = useRef();
   const textareaRespondParent = useRef();
   const textareaRespond = useRef();
@@ -33,30 +34,33 @@ function MainComment({ ky, rsp, usr, txt, setRsp }) {
     console.log(rsp);
     console.log(commentsParent);
     setCurCom(ky);
-    setRsp.commentsState.forEach((st, idx) => {
-      console.log(st);
-      console.log(st.response[0]);
-      const id = st.ky;
-      console.log(id);
-      let blah = undefined;
-      if (st.response[0]) {
-        for (let ind in st.response[0]) {
-          blah = st.response[0][ind];
-          if (blah) {
-            break;
-          }
-        }
-        console.log(blah);
-        if (id === blah) {
-          index = idx;
-        }
-      }
-    });
+    // setRsp.commentsState.forEach((st, idx) => {
+    //   console.log(st);
+    //   // console.log(st.response[0]);
+    //   const id = st.ky;
+    //   console.log(id);
+    //   let blah = undefined;
+    //   if (st.hasOwnProperty('response')) {
+    //     blah = st.response[0].ky;
+    //     // for (let ind in st.response[0]) {
+    //     //   console.log(ind);
+    //     //   blah = st.response[0][ind];
+    //     //   if (blah) {
+    //     //     break;
+    //     //   }
+    //     // }
+    //     // console.log(blah);
+    //     if (id === blah) {
+    //       index = idx;
+    //     }
+    //   }
+    // });
   }, []);
 
   useEffect(() => {
-    const newArr = [...setRsp.commentsResp];
-    console.log(newArr);
+    console.log(setRsp.commentsResp);
+    // const newArr = [...setRsp.commentsResp];
+    // console.log(newArr);
     console.log(setRsp.commentsState);
   }, [setRsp.commentsResp]);
 
@@ -165,11 +169,45 @@ function MainComment({ ky, rsp, usr, txt, setRsp }) {
 
   const handleOpinion = (e) => {
     console.log(e.target);
+    // const likeRef = setRsp.commentsState.like;
+    // const dislikeRef = setRsp.commentsState.dislike;
+    // console.log(likeRef);
+    // console.log(dislikeRef);
+    let eyeDee = undefined;
+    let likeArr = [];
     if (
       e.target.id.includes('yes') ||
-      e.target.parentElement.children[0].id.includes('yes')
+      e.target.parentElement.children[0].id.includes('yes') ||
+      e.target.className.includes('like')
     ) {
       console.log(e.target);
+      if (comPar.current.children[0].contains(e.target)) {
+        eyeDee = comPar.current.id;
+        setRsp.commentsState.forEach((cS, idx) => {
+          if (cS.ky === eyeDee) {
+            // console.log(setRsp.commentsState[idx]);
+            // likeArr = [{ ...setRsp.commentsState[idx] }];
+            // likeArr[0].like.push(user);
+            // console.log(likeArr);
+            // setRsp.setCommentsState(prv => {
+            //   return [...prv]
+            // })
+            likeArr = [...setRsp.commentsState];
+            console.log(likeArr);
+            if (likeArr[idx].like.length === 0) {
+              likeArr[idx].like.push(user);
+            } else {
+              likeArr[idx].like.forEach((lk) => {
+                if (user !== lk) {
+                  likeArr[idx].like.push(user);
+                }
+              });
+            }
+            console.log(likeArr);
+            setRsp.setCommentsState([...likeArr]);
+          }
+        });
+      }
       // e.target.style.display = 'none';
       like.current.children[1].textContent = 1;
       like.current.children[0].style.opacity = '.5';
@@ -177,7 +215,8 @@ function MainComment({ ky, rsp, usr, txt, setRsp }) {
       dislike.current.children[0].style.opacity = '1';
     } else if (
       e.target.id.includes('no') ||
-      e.target.parentElement.children[0].id.includes('no')
+      e.target.parentElement.children[0].id.includes('no') ||
+      e.target.className.includes('dislike')
     ) {
       like.current.children[1].textContent = 0;
       like.current.children[0].style.opacity = '1';
@@ -197,7 +236,7 @@ function MainComment({ ky, rsp, usr, txt, setRsp }) {
 
   return (
     <>
-      <div className={s.commentParent} id={ky}>
+      <div className={s.commentParent} id={ky} ref={comPar}>
         <div className={s.comments}>
           <div className={s.user}>
             <div className={s.userIcon}>
@@ -236,7 +275,7 @@ function MainComment({ ky, rsp, usr, txt, setRsp }) {
             }}
           >
             {/* MAPPING */}
-            {setRsp.trigger
+            {setRsp.trigger && rsp
               ? rsp.map((comRsp) => (
                   <div
                     className={s.comments}

@@ -23,9 +23,12 @@ const ArticleSite = () => {
   const [commentsState, setCommentsState] = useState([]);
   const [commentsResp, setCommentsResp] = useState([]);
   const [trigger, setTrigger] = useState(false);
+  const [arrived, setArrived] = useState(false);
 
   const [arr, setArr] = useState([]);
   const [ky, setKy] = useState([]);
+
+  // init comments on load
 
   let url = undefined;
   let queryParam = '';
@@ -55,9 +58,19 @@ const ArticleSite = () => {
       console.log(key);
       const arr = snapshot.child(`imageUrl`).val();
       const arrCom = snapshot.child(`comments`).val();
-      console.log(arrCom);
+
       if (arrCom) {
-        setCommentsState(arrCom);
+        console.log(...arrCom);
+        setCommentsState([...arrCom]);
+        let respArr = [];
+        arrCom.forEach((arrcm) => {
+          if (arrcm.hasOwnProperty('response')) {
+            respArr.push(...arrcm.response);
+          }
+        });
+        console.log(...respArr);
+        setCommentsResp([...respArr]);
+        setTrigger(true);
       }
       console.log(arr);
       arr.forEach((img, idx) => {
@@ -106,12 +119,13 @@ const ArticleSite = () => {
               console.log(key);
               const arr = snapshot.child(`comments`).val();
               console.log(arr);
-              // setCommentsState(arr);
+              // setCommentsState([...arr]);
             });
           }); //arrived on backend
       }
     }
   }, [commentsState]);
+
   useEffect(() => {
     if (commentsResp.length > 0) {
       console.log(commentsResp);
@@ -125,8 +139,8 @@ const ArticleSite = () => {
         newArr[idx].ky = cs.ky;
         newArr[idx].user = cs.user;
         newArr[idx].text = cs.text;
-        newArr[idx].like = 0;
-        newArr[idx].dislike = 0;
+        newArr[idx].like = [];
+        newArr[idx].dislike = [];
         let cnt = 0;
         commentsResp.forEach((cR, idxx) => {
           if (cR.ky === cs.ky) {
@@ -135,8 +149,8 @@ const ArticleSite = () => {
             newArr[idx].response[cnt].ky = cR.ky;
             newArr[idx].response[cnt].user = cR.user;
             newArr[idx].response[cnt].text = cR.text;
-            newArr[idx].response[cnt].like = 0;
-            newArr[idx].response[cnt].dislike = 0;
+            newArr[idx].response[cnt].like = [];
+            newArr[idx].response[cnt].dislike = [];
             cnt += 1;
           }
         });
