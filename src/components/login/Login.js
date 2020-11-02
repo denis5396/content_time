@@ -467,7 +467,7 @@ const Login = () => {
         />
         <input
           type="Submit"
-          readOnly="Sign In"
+          value="Sign In"
           onClick={handleSignIn}
           ref={signInBtn}
         />

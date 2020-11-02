@@ -1,9 +1,9 @@
-import React, { useContext, useRef, useState, useEffect } from 'react';
+import React, { useContext, useRef, useState, useEffect, memo } from 'react';
 import { UserContext } from '../../../contexts/User';
 import { v1 as uuid } from 'uuid';
 import s from '../ArticleSite.module.css';
 
-function MainComment({ ky, rsp, usr, txt, setRsp }) {
+function MainComment({ ky, rsp, usr, txt, likeOp, dislikeOp, setRsp }) {
   const { user } = useContext(UserContext);
   let commentsParent = useRef();
   const reply = useRef();
@@ -19,9 +19,13 @@ function MainComment({ ky, rsp, usr, txt, setRsp }) {
   // like dislike
   const like = useRef();
   const dislike = useRef();
+  const likeSpan = useRef();
+  const dislikeSpan = useRef();
 
   const [openReply, setOpenReply] = useState(false);
   const [openReply2, setOpenReply2] = useState(false);
+  // const [clickedLike, setClickedLike] = useState(false);
+  const [clickedDislike, setClickedDislike] = useState(false); //opinion clicked
   const [init, setInit] = useState(false);
   const [curCom, setCurCom] = useState('');
 
@@ -32,6 +36,7 @@ function MainComment({ ky, rsp, usr, txt, setRsp }) {
     console.log(replies);
     console.log(ky);
     console.log(rsp);
+    console.log(likeOp);
     console.log(commentsParent);
     setCurCom(ky);
     // setRsp.commentsState.forEach((st, idx) => {
@@ -55,6 +60,26 @@ function MainComment({ ky, rsp, usr, txt, setRsp }) {
     //     }
     //   }
     // });
+    if (likeOp) {
+      console.log(likeOp);
+      let boolCheck = false;
+      likeOp.forEach((lO) => {
+        if (lO === user) {
+          // like.current.style.color = '#55ad53';
+          like.current.style.opacity = '0.3';
+          boolCheck = true;
+          // #55ad53
+          // #d33d3d
+        }
+      });
+    }
+    if (dislikeOp) {
+      dislikeOp.forEach((dO) => {
+        if (dO === user) {
+          dislike.current.style.opacity = '0.3';
+        }
+      });
+    }
   }, []);
 
   useEffect(() => {
@@ -63,6 +88,13 @@ function MainComment({ ky, rsp, usr, txt, setRsp }) {
     // console.log(newArr);
     console.log(setRsp.commentsState);
   }, [setRsp.commentsResp]);
+
+  // useEffect(() => {
+  //   if (clickedLike) {
+  //     alert('haha');
+
+  //   }
+  // }, [clickedLike]);
 
   const handleReply = () => {
     console.log(reply.current.parentElement.parentElement.id);
@@ -166,7 +198,7 @@ function MainComment({ ky, rsp, usr, txt, setRsp }) {
       }
     }
   };
-
+  // let likeArr = [];
   const handleOpinion = (e) => {
     console.log(e.target);
     // const likeRef = setRsp.commentsState.like;
@@ -175,53 +207,345 @@ function MainComment({ ky, rsp, usr, txt, setRsp }) {
     // console.log(dislikeRef);
     let eyeDee = undefined;
     let likeArr = [];
+    let dontUpdate = false;
+    let cnt = 0;
     if (
       e.target.id.includes('yes') ||
       e.target.parentElement.children[0].id.includes('yes') ||
-      e.target.className.includes('like')
+      e.target.id.includes('tru')
     ) {
       console.log(e.target);
+      // like.current.children[0].style.opacity = '.5';
+      // like.current.children[1].style.opacity = '.5';
       if (comPar.current.children[0].contains(e.target)) {
         eyeDee = comPar.current.id;
         setRsp.commentsState.forEach((cS, idx) => {
           if (cS.ky === eyeDee) {
-            // console.log(setRsp.commentsState[idx]);
-            // likeArr = [{ ...setRsp.commentsState[idx] }];
-            // likeArr[0].like.push(user);
-            // console.log(likeArr);
-            // setRsp.setCommentsState(prv => {
-            //   return [...prv]
-            // })
             likeArr = [...setRsp.commentsState];
             console.log(likeArr);
-            if (likeArr[idx].like.length === 0) {
-              likeArr[idx].like.push(user);
-            } else {
-              likeArr[idx].like.forEach((lk) => {
-                if (user !== lk) {
+            if (likeArr[idx].like) {
+              if (likeArr[idx].like.length === 0) {
+                likeArr[idx].like.push(user);
+                likeArr[idx].dislike.forEach((lk, idxx) => {
+                  if (lk === user) {
+                    likeArr[idx].dislike.splice(idxx, 1);
+                  }
+                });
+              } else {
+                let bool = false;
+                likeArr[idx].like.forEach((lk) => {
+                  if (user === lk) {
+                    bool = true;
+                    dontUpdate = true;
+                    cnt = idx;
+                  }
+                });
+                if (!bool) {
                   likeArr[idx].like.push(user);
                 }
-              });
+                if (!likeArr[idx].dislike) {
+                  likeArr[idx].dislike = [];
+                }
+                likeArr[idx].dislike.forEach((lk, idxx) => {
+                  if (lk === user) {
+                    likeArr[idx].dislike.splice(idxx, 1);
+                  }
+                });
+              }
+            } else {
+              likeArr[idx].like = [];
+              if (!likeArr[idx].dislike) {
+                likeArr[idx].dislike = [];
+              }
+              if (likeArr[idx].like.length === 0) {
+                likeArr[idx].like.push(user);
+                likeArr[idx].dislike.forEach((lk, idxx) => {
+                  if (lk === user) {
+                    likeArr[idx].dislike.splice(idxx, 1);
+                  }
+                });
+              } else {
+                let bool = false;
+                likeArr[idx].like.forEach((lk) => {
+                  if (user === lk) {
+                    bool = true;
+                    cnt = idx;
+                  }
+                });
+                if (!bool) {
+                  likeArr[idx].like.push(user);
+                }
+                likeArr[idx].dislike.forEach((lk, idxx) => {
+                  if (lk === user) {
+                    likeArr[idx].dislike.splice(idxx, 1);
+                  }
+                });
+              }
             }
             console.log(likeArr);
-            setRsp.setCommentsState([...likeArr]);
+            if (!dontUpdate) {
+              //dont update state if liked already
+              setRsp.setCommentsState([...likeArr]);
+            }
           }
         });
       }
       // e.target.style.display = 'none';
-      like.current.children[1].textContent = 1;
-      like.current.children[0].style.opacity = '.5';
-      dislike.current.children[1].textContent = 0;
-      dislike.current.children[0].style.opacity = '1';
     } else if (
       e.target.id.includes('no') ||
       e.target.parentElement.children[0].id.includes('no') ||
-      e.target.className.includes('dislike')
+      e.target.id.includes('fls')
     ) {
-      like.current.children[1].textContent = 0;
-      like.current.children[0].style.opacity = '1';
-      dislike.current.children[1].textContent = 1;
-      dislike.current.children[0].style.opacity = '.5';
+      if (comPar.current.children[0].contains(e.target)) {
+        eyeDee = comPar.current.id;
+        setRsp.commentsState.forEach((cS, idx) => {
+          if (cS.ky === eyeDee) {
+            likeArr = [...setRsp.commentsState];
+            console.log(likeArr);
+            if (likeArr[idx].dislike) {
+              if (likeArr[idx].dislike.length === 0) {
+                likeArr[idx].dislike.push(user);
+                likeArr[idx].like.forEach((lk, idxx) => {
+                  if (lk === user) {
+                    likeArr[idx].like.splice(idxx, 1);
+                  }
+                });
+              } else {
+                let bool = false;
+                likeArr[idx].dislike.forEach((lk) => {
+                  if (user === lk) {
+                    cnt = idx;
+                    bool = true;
+                  }
+                });
+                if (!bool) {
+                  likeArr[idx].dislike.push(user);
+                }
+                likeArr[idx].like.forEach((lk, idxx) => {
+                  if (lk === user) {
+                    likeArr[idx].like.splice(idxx, 1);
+                  }
+                });
+              }
+            } else {
+              likeArr[idx].dislike = [];
+              if (likeArr[idx].dislike.length === 0) {
+                likeArr[idx].dislike.push(user);
+                if (likeArr[idx].like) {
+                  likeArr[idx].like.forEach((lk, idxx) => {
+                    if (lk === user) {
+                      likeArr[idx].like.splice(idxx, 1);
+                    }
+                  });
+                }
+              } else {
+                let bool = false;
+                likeArr[idx].dislike.forEach((lk) => {
+                  if (user === lk) {
+                    bool = true;
+                    cnt = idx;
+                  }
+                });
+                if (!bool) {
+                  likeArr[idx].dislike.push(user);
+                }
+                likeArr[idx].like.forEach((lk, idxx) => {
+                  if (lk === user) {
+                    likeArr[idx].like.splice(idxx, 1);
+                  }
+                });
+              }
+            }
+            console.log(likeArr);
+            // setClickedLike(true);
+            setRsp.setCommentsState([...likeArr]);
+            setClickedDislike(true);
+          }
+        });
+      }
+    }
+  };
+  const handleOpinionReply = (e) => {
+    console.log(e.target);
+
+    let eyeDee = undefined;
+    let likeArr = [];
+    let childComId = 0;
+    let dontUpdate = false;
+    let cnt = 0;
+    if (
+      e.target.id.includes('yesReply') ||
+      e.target.parentElement.children[0].id.includes('yesReply') ||
+      e.target.id.includes('truReply')
+    ) {
+      console.log(e.target);
+      console.log(replies);
+
+      // get the currently clicked comment child
+      replies.forEach((reply, i) => {
+        if (reply.contains(e.target)) {
+          childComId = i;
+        }
+      });
+      if (comPar.current.children[1].contains(e.target)) {
+        eyeDee = comPar.current.id;
+        setRsp.commentsState.forEach((cS, idx) => {
+          if (cS.ky === eyeDee) {
+            likeArr = [...setRsp.commentsState];
+            console.log(likeArr);
+            if (likeArr[idx].response[childComId].like) {
+              if (likeArr[idx].response[childComId].like.length === 0) {
+                likeArr[idx].response[childComId].like.push(user);
+                likeArr[idx].response[childComId].dislike.forEach(
+                  (lk, idxx) => {
+                    if (lk === user) {
+                      likeArr[idx].response[childComId].dislike.splice(idxx, 1);
+                    }
+                  }
+                );
+              } else {
+                let bool = false;
+                likeArr[idx].response[childComId].like.forEach((lk) => {
+                  if (user === lk) {
+                    bool = true;
+                    dontUpdate = true;
+                    cnt = idx;
+                  }
+                });
+                if (!bool) {
+                  likeArr[idx].response[childComId].like.push(user);
+                }
+                if (!likeArr[idx].response[childComId].dislike) {
+                  likeArr[idx].response[childComId].dislike = [];
+                }
+                likeArr[idx].response[childComId].dislike.forEach(
+                  (lk, idxx) => {
+                    if (lk === user) {
+                      likeArr[idx].response[childComId].dislike.splice(idxx, 1);
+                    }
+                  }
+                );
+              }
+            } else {
+              likeArr[idx].response[childComId].like = [];
+              if (!likeArr[idx].response[childComId].dislike) {
+                likeArr[idx].response[childComId].dislike = [];
+              }
+              if (likeArr[idx].response[childComId].like.length === 0) {
+                likeArr[idx].response[childComId].like.push(user);
+                likeArr[idx].response[childComId].dislike.forEach(
+                  (lk, idxx) => {
+                    if (lk === user) {
+                      likeArr[idx].response[childComId].dislike.splice(idxx, 1);
+                    }
+                  }
+                );
+              } else {
+                let bool = false;
+                likeArr[idx].response[childComId].like.forEach((lk) => {
+                  if (user === lk) {
+                    bool = true;
+                    cnt = idx;
+                  }
+                });
+                if (!bool) {
+                  likeArr[idx].response[childComId].like.push(user);
+                }
+                likeArr[idx].response[childComId].dislike.forEach(
+                  (lk, idxx) => {
+                    if (lk === user) {
+                      likeArr[idx].response[childComId].dislike.splice(idxx, 1);
+                    }
+                  }
+                );
+              }
+            }
+            console.log(likeArr);
+            if (!dontUpdate) {
+              //dont update state if liked already
+              setRsp.setCommentsState([...likeArr]);
+            }
+          }
+        });
+      }
+    } else if (
+      e.target.id.includes('noReply') ||
+      e.target.parentElement.children[0].id.includes('noReply') ||
+      e.target.id.includes('flsReply')
+    ) {
+      replies.forEach((reply, i) => {
+        if (reply.contains(e.target)) {
+          childComId = i;
+        }
+      });
+      if (comPar.current.children[1].contains(e.target)) {
+        eyeDee = comPar.current.id;
+        setRsp.commentsState.forEach((cS, idx) => {
+          if (cS.ky === eyeDee) {
+            likeArr = [...setRsp.commentsState];
+            console.log(likeArr);
+            if (likeArr[idx].response[childComId].dislike) {
+              if (likeArr[idx].response[childComId].dislike.length === 0) {
+                likeArr[idx].response[childComId].dislike.push(user);
+                likeArr[idx].response[childComId].like.forEach((lk, idxx) => {
+                  if (lk === user) {
+                    likeArr[idx].response[childComId].like.splice(idxx, 1);
+                  }
+                });
+              } else {
+                let bool = false;
+                likeArr[idx].response[childComId].dislike.forEach((lk) => {
+                  if (user === lk) {
+                    cnt = idx;
+                    bool = true;
+                  }
+                });
+                if (!bool) {
+                  likeArr[idx].response[childComId].dislike.push(user);
+                }
+                likeArr[idx].response[childComId].like.forEach((lk, idxx) => {
+                  if (lk === user) {
+                    likeArr[idx].response[childComId].like.splice(idxx, 1);
+                  }
+                });
+              }
+            } else {
+              likeArr[idx].response[childComId].dislike = [];
+              if (likeArr[idx].response[childComId].dislike.length === 0) {
+                likeArr[idx].response[childComId].dislike.push(user);
+                //when zero zero and u click dislike u wanna check if like is there
+                if (likeArr[idx].response[childComId].like) {
+                  likeArr[idx].response[childComId].like.forEach((lk, idxx) => {
+                    if (lk === user) {
+                      likeArr[idx].response[childComId].like.splice(idxx, 1);
+                    }
+                  });
+                }
+              } else {
+                let bool = false;
+                likeArr[idx].response[childComId].dislike.forEach((lk) => {
+                  if (user === lk) {
+                    bool = true;
+                    cnt = idx;
+                  }
+                });
+                if (!bool) {
+                  likeArr[idx].response[childComId].dislike.push(user);
+                }
+                likeArr[idx].response[childComId].like.forEach((lk, idxx) => {
+                  if (lk === user) {
+                    likeArr[idx].response[childComId].like.splice(idxx, 1);
+                  }
+                });
+              }
+            }
+            console.log(likeArr);
+            // setClickedLike(true);
+            setRsp.setCommentsState([...likeArr]);
+            setClickedDislike(true);
+          }
+        });
+      }
     }
   };
 
@@ -249,15 +573,39 @@ function MainComment({ ky, rsp, usr, txt, setRsp }) {
           </div>
           <div className={s.commentOpinion}>
             <span className={s.bundleOpinion} onClick={(e) => handleOpinion(e)}>
-              <span style={{ color: '#55ad53' }} className={s.like} ref={like}>
-                <i id="yes" class="fas fa-heart"></i> <span>0</span>
+              <span
+                style={{
+                  color: !likeOp ? '#fff' : likeOp.length > 0 ? '#55ad53' : '',
+                  opacity: !likeOp ? '1' : likeOp.includes(user) ? '0.3' : '1',
+                }}
+                id={s.tru}
+                className={s.like}
+                ref={like}
+              >
+                <i id="yes" class="fas fa-heart"></i>{' '}
+                <span ref={likeSpan}>{likeOp ? likeOp.length : 0}</span>
               </span>
               <span
-                style={{ color: '#d33d3d' }}
+                style={{
+                  color: !dislikeOp
+                    ? '#fff'
+                    : dislikeOp.length > 0
+                    ? '#d33d3d'
+                    : '',
+                  opacity: !dislikeOp
+                    ? '1'
+                    : dislikeOp.includes(user)
+                    ? '0.3'
+                    : '1',
+                }}
                 className={s.dislike}
+                id={s.fls}
                 ref={dislike}
               >
-                <i id="no" class="fas fa-heart-broken"></i> <span>0</span>
+                <i id="no" class="fas fa-heart-broken"></i>{' '}
+                <span ref={dislikeSpan}>
+                  {dislikeOp ? dislikeOp.length : 0}
+                </span>
               </span>
             </span>
             <span className={s.reply} onClick={handleReply} ref={reply}>
@@ -294,12 +642,47 @@ function MainComment({ ky, rsp, usr, txt, setRsp }) {
                       <p>{comRsp.text}</p>
                     </div>
                     <div className={s.commentOpinion}>
-                      <span className={s.bundleOpinion}>
-                        <span class={s.like} style={{ color: '#55ad53' }}>
-                          <i class="fas fa-heart"></i> 0
+                      <span
+                        className={s.bundleOpinion}
+                        onClick={handleOpinionReply}
+                      >
+                        <span
+                          id={s.truReply}
+                          class={s.like}
+                          style={{
+                            color: !comRsp.like
+                              ? '#fff'
+                              : comRsp.like.length > 0
+                              ? '#55ad53'
+                              : '',
+                            opacity: !comRsp.like
+                              ? '1'
+                              : comRsp.like.includes(user)
+                              ? '0.3'
+                              : '1',
+                          }}
+                        >
+                          <i id="yesReply" class="fas fa-heart"></i>{' '}
+                          {comRsp.like ? comRsp.like.length : 0}
                         </span>
-                        <span class={s.dislike} style={{ color: '#d33d3d' }}>
-                          <i class="fas fa-heart-broken"></i> 0
+                        <span
+                          id={s.flsReply}
+                          class={s.dislike}
+                          style={{
+                            color: !comRsp.dislike
+                              ? '#fff'
+                              : comRsp.dislike.length > 0
+                              ? '#d33d3d'
+                              : '',
+                            opacity: !comRsp.dislike
+                              ? '1'
+                              : comRsp.dislike.includes(user)
+                              ? '0.3'
+                              : '1',
+                          }}
+                        >
+                          <i id="noReply" class="fas fa-heart-broken"></i>{' '}
+                          {comRsp.dislike ? comRsp.dislike.length : 0}
                         </span>
                       </span>
                       <span className={s.reply} onClick={handleRT} ref={reply}>
@@ -315,5 +698,8 @@ function MainComment({ ky, rsp, usr, txt, setRsp }) {
     </>
   );
 }
-
+const areEqual = (prevProps, nextProps) => {
+  console.log('haha');
+  return prevProps === nextProps;
+};
 export default MainComment;

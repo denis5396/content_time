@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { memo, useContext, useEffect, useRef, useState } from 'react';
 import { UserContext } from '../../contexts/User';
 import { db } from '../../firebase';
 import { v1 as uuid } from 'uuid';
@@ -27,6 +27,8 @@ const ArticleSite = () => {
 
   const [arr, setArr] = useState([]);
   const [ky, setKy] = useState([]);
+
+  const [clickedLike, setClickedLike] = useState(false);
 
   // init comments on load
 
@@ -84,7 +86,6 @@ const ArticleSite = () => {
         setArr([...imageUrls]);
       }
     });
-
     console.log(queryParam);
     console.log(url);
     //  scrollOffset.current.style.scrollBehavior = 'smooth'
@@ -123,6 +124,10 @@ const ArticleSite = () => {
             });
           }); //arrived on backend
       }
+      if (arr && thumbImgs[0]) {
+        thumbImgs[0].style.border = '0.3rem solid lightseagreen';
+        console.log(thumbImgs);
+      }
     }
   }, [commentsState]);
 
@@ -139,8 +144,16 @@ const ArticleSite = () => {
         newArr[idx].ky = cs.ky;
         newArr[idx].user = cs.user;
         newArr[idx].text = cs.text;
-        newArr[idx].like = [];
-        newArr[idx].dislike = [];
+        if (cs.like) {
+          newArr[idx].like = [...cs.like];
+        } else {
+          newArr[idx].like = [];
+        }
+        if (cs.dislike) {
+          newArr[idx].dislike = [...cs.dislike];
+        } else {
+          newArr[idx].dislike = [];
+        }
         let cnt = 0;
         commentsResp.forEach((cR, idxx) => {
           if (cR.ky === cs.ky) {
@@ -149,8 +162,16 @@ const ArticleSite = () => {
             newArr[idx].response[cnt].ky = cR.ky;
             newArr[idx].response[cnt].user = cR.user;
             newArr[idx].response[cnt].text = cR.text;
-            newArr[idx].response[cnt].like = [];
-            newArr[idx].response[cnt].dislike = [];
+            if (cR.like) {
+              newArr[idx].response[cnt].like = [...cR.like];
+            } else {
+              newArr[idx].response[cnt].like = [];
+            }
+            if (cR.dislike) {
+              newArr[idx].response[cnt].dislike = [...cR.dislike];
+            } else {
+              newArr[idx].response[cnt].dislike = [];
+            }
             cnt += 1;
           }
         });
@@ -456,7 +477,7 @@ const ArticleSite = () => {
                   </div>
                 </div>
                 <div id={s.commentBody}>
-                  {commentsState.map((comm) => {
+                  {commentsState.map((comm, i) => {
                     return (
                       <MainComment
                         key={uuid()}
@@ -464,6 +485,8 @@ const ArticleSite = () => {
                         usr={comm.user}
                         txt={comm.text}
                         rsp={comm.response} //odgovori
+                        likeOp={comm.like}
+                        dislikeOp={comm.dislike}
                         setRsp={{
                           trigger,
                           commentsState,
@@ -484,4 +507,4 @@ const ArticleSite = () => {
   );
 };
 
-export default ArticleSite;
+export default memo(ArticleSite);
