@@ -139,7 +139,11 @@ function MainComment({ ky, rsp, usr, txt, likeOp, dislikeOp, setRsp }) {
   };
   const txtArea = (
     <div className={s.textInput} ref={textareaRespondParent}>
-      <textarea maxLength="200" ref={textareaRespond}></textarea>
+      <textarea maxLength="200" ref={textareaRespond}>
+        {comPar.current
+          ? `@${comPar.current.children[0].children[0].children[1].textContent} `
+          : ''}
+      </textarea>
       <div className={s.replyDiv}>
         <i class="fas fa-pencil-alt"></i>
         <button onClick={handleUserConfirm}>Confirm</button>
@@ -190,6 +194,7 @@ function MainComment({ ky, rsp, usr, txt, likeOp, dislikeOp, setRsp }) {
       clicked = true;
       for (let i = 0; i < userResponse.current.children.length; i++) {
         if (userResponse.current.children[i].contains(e.target)) {
+          newDiv.children[0].textContent = `@${userResponse.current.children[i].children[0].children[1].textContent} `;
           userResponse.current.children[i].parentNode.insertBefore(
             newDiv,
             userResponse.current.children[i].nextSibling

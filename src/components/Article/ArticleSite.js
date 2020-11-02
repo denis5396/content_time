@@ -35,6 +35,13 @@ const ArticleSite = () => {
   let url = undefined;
   let queryParam = '';
   let imageUrls = [];
+  // useEffect(() => {
+  //   if (arr && thumbImgs[0]) {
+  //     thumbImgs[0].style.border = '0.3rem solid lightseagreen';
+  //     console.log(thumbImgs);
+  //   }
+  //   alert('ha');
+  // });
   useEffect(() => {
     if (localStorage.getItem('userName')) {
       const usr = JSON.parse(localStorage.getItem('userName'));
@@ -123,10 +130,6 @@ const ArticleSite = () => {
               // setCommentsState([...arr]);
             });
           }); //arrived on backend
-      }
-      if (arr && thumbImgs[0]) {
-        thumbImgs[0].style.border = '0.3rem solid lightseagreen';
-        console.log(thumbImgs);
       }
     }
   }, [commentsState]);
@@ -438,9 +441,9 @@ const ArticleSite = () => {
                   onClick={(e) => handleThumbnail(e)}
                 >
                   {arr
-                    ? arr.map((img) => (
+                    ? arr.map((img, i) => (
                         <img
-                          key={uuid()}
+                          key={i}
                           src={img}
                           ref={(imgs) => {
                             thumbImgs.push(imgs);
