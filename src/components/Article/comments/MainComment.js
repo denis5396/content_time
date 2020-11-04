@@ -23,10 +23,7 @@ function MainComment({ ky, rsp, usr, txt, likeOp, dislikeOp, setRsp }) {
   const dislikeSpan = useRef();
 
   const [openReply, setOpenReply] = useState(false);
-  const [openReply2, setOpenReply2] = useState(false);
-  // const [clickedLike, setClickedLike] = useState(false);
-  const [clickedDislike, setClickedDislike] = useState(false); //opinion clicked
-  const [init, setInit] = useState(false);
+  const [help, setHelp] = useState(false);
   const [curCom, setCurCom] = useState('');
 
   // get comments on init
@@ -83,38 +80,72 @@ function MainComment({ ky, rsp, usr, txt, likeOp, dislikeOp, setRsp }) {
   }, []);
 
   useEffect(() => {
+    if (openReply) {
+      // textareaRespondParent.current.style.display = 'block';
+      respondBox.current.insertBefore(
+        textareaRespondParent.current,
+        respondBox.current.children[0]
+      );
+    } else if (!openReply) {
+      console.log('hahaha');
+      console.log(help);
+      // for (let i = 0; i < userResponse.current.children.length; i++) {
+      //   console.log(userResponse.current.children[i]);
+      // }
+      if (done) {
+        respondBox.current.insertBefore(
+          textareaRespondParent.current,
+          respondBox.current.children[0]
+        );
+      }
+      textareaRespondParent.current.remove();
+    }
+  }, [openReply]);
+
+  useEffect(() => {
+    console.log('rerender');
+  });
+  useEffect(() => {
     console.log(setRsp.commentsResp);
     // const newArr = [...setRsp.commentsResp];
     // console.log(newArr);
     console.log(setRsp.commentsState);
   }, [setRsp.commentsResp]);
 
-  // useEffect(() => {
-  //   if (clickedLike) {
-  //     alert('haha');
-
-  //   }
-  // }, [clickedLike]);
-
   const handleReply = () => {
     console.log(reply.current.parentElement.parentElement.id);
-    setOpenReply((prev) => !prev);
-  };
-
-  const handleRT = () => {
-    // setOpenReply2((prev) => !prev);
-    // const div = document.createElement('div');
-    // div.textContent = 'asdasd';
-    // userResponse.current.insertBefore(div, replies[2]);
+    if (clicked) {
+      console.log(userResponse.current.children);
+      for (let i = 0; i < userResponse.current.children.length; i++) {
+        if (!userResponse.current.children[i].className) {
+          userResponse.current.children[i].remove();
+          clicked = false;
+        }
+      }
+    }
+    if (respondBox.current.children.length === 1) {
+      textareaRespondParent.current.children[0].textContent = `@${comPar.current.children[0].children[0].children[1].textContent} `;
+      respondBox.current.insertBefore(
+        textareaRespondParent.current,
+        respondBox.current.children[0]
+      );
+      const val = textareaRespondParent.current.children[0].value;
+      textareaRespondParent.current.children[0].focus();
+      textareaRespondParent.current.children[0].value = '';
+      textareaRespondParent.current.children[0].value = val;
+    } else if (respondBox.current.children.length === 2) {
+      textareaRespondParent.current.remove();
+    }
   };
 
   const handleUserConfirm = () => {
     let text = undefined;
-    if (openReply) {
+    if (respondBox.current.children.length === 2) {
       text = textareaRespond.current.value;
-    } else if (openReply2) {
-      text = textareaRespond2.current.value;
+      console.log(text);
     }
+    respondBox.current.children[0].children[0].value = `@${comPar.current.children[0].children[0].children[1].textContent} `;
+    respondBox.current.children[0].remove();
     console.log(setRsp.commentsResp);
     setRsp.setCommentsResp((prevResp) => {
       return [...prevResp, { ky, user, text }];
@@ -127,9 +158,13 @@ function MainComment({ ky, rsp, usr, txt, likeOp, dislikeOp, setRsp }) {
     const { id } = e.target;
     if (id.includes('btnReply')) {
       let text = undefined;
-      console.log();
       if (clicked) {
         text = e.target.parentElement.previousSibling.value;
+      }
+      for (let i = 0; i < userResponse.current.children.length; i++) {
+        if (!userResponse.current.children[i].className) {
+          userResponse.current.children[i].remove();
+        }
       }
       setRsp.setCommentsResp((prevResp) => {
         return [...prevResp, { ky, user, text }];
@@ -151,7 +186,30 @@ function MainComment({ ky, rsp, usr, txt, likeOp, dislikeOp, setRsp }) {
     </div>
   );
   let clicked = false;
+  let done = false;
   const getC = (e) => {
+    // toggle resp com, by clicking the reply button above the resp com
+    if (
+      e.target.className.includes('reply') &&
+      e.target.parentElement.parentElement.nextSibling
+        ? !e.target.parentElement.parentElement.nextSibling.className
+        : null
+    ) {
+      console.log('aha');
+      e.target.parentElement.parentElement.nextSibling.remove();
+      clicked = false;
+      return;
+    }
+    // if clicked reply previously, and then comment not submitted, remove unsubmitted com and insert new textarea
+    if (clicked && e.target.className.includes('reply')) {
+      console.log(userResponse.current.children);
+      for (let i = 0; i < userResponse.current.children.length; i++) {
+        if (!userResponse.current.children[i].className) {
+          userResponse.current.children[i].remove();
+          clicked = false;
+        }
+      }
+    }
     const newDiv = document.createElement('div');
     newDiv.style.padding = '1rem';
     newDiv.style.marginBottom = '1rem';
@@ -189,7 +247,6 @@ function MainComment({ ky, rsp, usr, txt, likeOp, dislikeOp, setRsp }) {
     newDiv.appendChild(txtAr);
     newDiv.appendChild(newDiv2);
     newDiv.addEventListener('click', handleReplyConfirm(e));
-
     if (e.target.className.includes('reply') && !clicked) {
       clicked = true;
       for (let i = 0; i < userResponse.current.children.length; i++) {
@@ -199,6 +256,24 @@ function MainComment({ ky, rsp, usr, txt, likeOp, dislikeOp, setRsp }) {
             newDiv,
             userResponse.current.children[i].nextSibling
           );
+          const val =
+            userResponse.current.children[i].parentNode.children[i + 1]
+              .children[0];
+          val.focus();
+          const valz =
+            userResponse.current.children[i].parentNode.children[i + 1]
+              .children[0].value;
+          val.value = '';
+          val.value = valz;
+          console.log(val);
+        }
+        if (i === userResponse.current.children.length - 1) {
+          done = true;
+        }
+      }
+      if (done) {
+        if (respondBox.current.children[0].className.includes('textInput')) {
+          respondBox.current.children[0].remove();
         }
       }
     }
@@ -364,7 +439,6 @@ function MainComment({ ky, rsp, usr, txt, likeOp, dislikeOp, setRsp }) {
             console.log(likeArr);
             // setClickedLike(true);
             setRsp.setCommentsState([...likeArr]);
-            setClickedDislike(true);
           }
         });
       }
@@ -547,7 +621,6 @@ function MainComment({ ky, rsp, usr, txt, likeOp, dislikeOp, setRsp }) {
             console.log(likeArr);
             // setClickedLike(true);
             setRsp.setCommentsState([...likeArr]);
-            setClickedDislike(true);
           }
         });
       }
@@ -619,7 +692,8 @@ function MainComment({ ky, rsp, usr, txt, likeOp, dislikeOp, setRsp }) {
           </div>
         </div>
         <div className={s.respondBox} ref={respondBox}>
-          {openReply ? txtArea : null}
+          {/* {openReply ? txtArea : null} */}
+          {txtArea}
           <div
             className={s.userResponse}
             ref={userResponse}
@@ -690,7 +764,7 @@ function MainComment({ ky, rsp, usr, txt, likeOp, dislikeOp, setRsp }) {
                           {comRsp.dislike ? comRsp.dislike.length : 0}
                         </span>
                       </span>
-                      <span className={s.reply} onClick={handleRT} ref={reply}>
+                      <span className={s.reply} ref={reply}>
                         <i class="fas fa-reply"></i> Reply
                       </span>
                     </div>

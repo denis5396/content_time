@@ -23,14 +23,14 @@ const ArticleSite = () => {
   const [commentsState, setCommentsState] = useState([]);
   const [commentsResp, setCommentsResp] = useState([]);
   const [trigger, setTrigger] = useState(false);
-  const [arrived, setArrived] = useState(false);
 
   const [arr, setArr] = useState([]);
   const [ky, setKy] = useState([]);
-
-  const [clickedLike, setClickedLike] = useState(false);
-
-  // init comments on load
+  const [title, setTitle] = useState('');
+  const [subTitle, setSubTitle] = useState('');
+  const [articleTxt, setArticleTxt] = useState('');
+  const [articleCategory, setArticleCategory] = useState('');
+  const [comLength, setComLength] = useState(0);
 
   let url = undefined;
   let queryParam = '';
@@ -47,7 +47,7 @@ const ArticleSite = () => {
       const usr = JSON.parse(localStorage.getItem('userName'));
       setUser(usr);
     }
-    handleScroll();
+
     console.log(thumbImgs);
     url = window.location.href;
     queryParam = '';
@@ -67,7 +67,10 @@ const ArticleSite = () => {
       console.log(key);
       const arr = snapshot.child(`imageUrl`).val();
       const arrCom = snapshot.child(`comments`).val();
-
+      setTitle(snapshot.child('title').val());
+      setSubTitle(snapshot.child('subTitle').val());
+      setArticleTxt(snapshot.child('text').val());
+      setArticleCategory(snapshot.child('category').val());
       if (arrCom) {
         console.log(...arrCom);
         setCommentsState([...arrCom]);
@@ -93,11 +96,23 @@ const ArticleSite = () => {
         setArr([...imageUrls]);
       }
     });
+    if (window.innerWidth <= 500) {
+      const height = scrollHeightOne.current.children[1].children[2].height;
+      mainImg.current.style.height = height;
+    }
+    if (window.innerWidth >= 1400) {
+      const height = scrollHeightOne.current.children[1].children[2].height;
+      // console.log(mainImg.current.parentElement);
+      mainImg.current.parentElement.style.height = `${height}px`;
+    }
     console.log(queryParam);
     console.log(url);
     //  scrollOffset.current.style.scrollBehavior = 'smooth'
   }, []);
-
+  useEffect(() => {
+    handleScroll();
+    // console.log(articleTitle);
+  });
   useEffect(() => {
     if (commentsState.length > 0) {
       console.log(commentsState);
@@ -124,9 +139,18 @@ const ArticleSite = () => {
             console.log(ref);
             ref.once('value').then(function (snapshot) {
               var key = snapshot.key; // "ada"
+              let comL = 0;
               console.log(key);
               const arr = snapshot.child(`comments`).val();
               console.log(arr);
+              for (let i = 0; i < arr.length; i++) {
+                comL += 1;
+                if (arr[i].response) {
+                  comL += arr[i].response.length;
+                }
+              }
+              console.log(comL);
+              setComLength(comL);
               // setCommentsState([...arr]);
             });
           }); //arrived on backend
@@ -185,14 +209,17 @@ const ArticleSite = () => {
     }
   }, [commentsResp]);
   const saveComment = () => {
-    const text = commentEnter.current.value;
-    const id = uuid();
-    setKy((prev) => {
-      return [...prev, id];
-    });
-    setCommentsState((prevCom) => {
-      return [...prevCom, { ky: id, user, text, response: [] }];
-    });
+    if (commentEnter.current.value) {
+      const text = commentEnter.current.value;
+      const id = uuid();
+      setKy((prev) => {
+        return [...prev, id];
+      });
+      setCommentsState((prevCom) => {
+        return [...prevCom, { ky: id, user, text, response: [] }];
+      });
+      commentEnter.current.value = '';
+    }
   };
 
   useEffect(() => {
@@ -309,77 +336,327 @@ const ArticleSite = () => {
         <i id={s.oL} class="fas fa-chevron-left"></i>
       </div>
       <div id={s.articleId}>
-        <div id={s.articleDesign}>
+        <div
+          id={s.articleDesign}
+          style={{
+            backgroundColor:
+              articleCategory === 'news'
+                ? '#ff005c'
+                : articleCategory === 'sports'
+                ? '#ffc000'
+                : articleCategory === 'lifestyle'
+                ? '#673ab7'
+                : articleCategory === 'technology'
+                ? '#07b0d7'
+                : 'initial',
+          }}
+        >
           <div id={s.designHeader}>
             <span
+              style={{
+                cursor: 'pointer',
+              }}
               onClick={() =>
                 document
                   .querySelector('body')
                   .classList.remove('visible-scrollbar')
               }
             >
-              <i class="fas fa-arrow-left"></i> Back to projects
+              <i class="fas fa-arrow-left"></i> Back to articles
             </span>
             <span id={s.options}>
               <span id={s.dot} />
             </span>
             <div id={s.designTitle}>
-              <h1>Nintento of America</h1>
-              <h5>nintendo of america</h5>
+              <h1>{title ? title : ''}</h1>
+              <h5>{subTitle ? subTitle : ''}</h5>
             </div>
-            <span id={s.o}>
-              <span id={s.oHide} />
-              <ul>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-                <li class={s.oLine}></li>
-              </ul>
-            </span>
+            {articleCategory === 'news' ? (
+              <span id={s.o}>
+                <span id={s.oHide} />
+                <ul>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                  <li class={s.oLine}></li>
+                </ul>
+              </span>
+            ) : null}
+            {articleCategory === 'sports' ? (
+              <span id={s.x}>
+                <span id={s.x1} />
+                <span id={s.x2} />
+                <span id={s.x3} />
+                <span id={s.x4} />
+                <span id={s.x5} />
+                <span id={s.x6} />
+                <ul>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                  <li class={s.xLine}></li>
+                </ul>
+              </span>
+            ) : null}
+            {articleCategory === 'lifestyle' ? (
+              <span id={s.triangle}>
+                <span id={s.hideL} />
+                <span id={s.hideR} />
+                <span id={s.triangleIn} />
+                <ul id={s.triangleUl}>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                </ul>
+                <span id={s.triangleHide} />
+              </span>
+            ) : null}
+            {articleCategory === 'technology' ? (
+              <span id={s.square}>
+                <span id={s.squareHide} />
+                <ul>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                </ul>
+              </span>
+            ) : null}
           </div>
         </div>
         <div id={s.articleText} onScroll={handleScroll} ref={scrollOffset}>
@@ -400,24 +677,28 @@ const ArticleSite = () => {
               Comments
             </li>
           </ul>
+          <div id={s.mobileTitle}>
+            <h2>{title ? title : ''}</h2>
+            <h5>{subTitle ? subTitle : ''}</h5>
+          </div>
           <div id={s.articleSliderParent}>
             <div id={s.one} ref={scrollHeightOne}>
               <div id={s.scroll}>
                 <div id={s.progressBar} ref={progressBar}></div>
                 <div id={s.scrollPath}></div>
               </div>
-              {/* <div id={s.body}>
-            <span id={s.line}/>
-            <h2>About this project</h2>
-            <img src={require('../../assets/img/ecommerce.jpg')} style={{marginTop: '2rem'}}/>
-            <p className={s.ptext}>Lorem ipsum dolor sit amet consectetur adipisicing elit. Corrupti adipisci ratione voluptate temporibus quos consequuntur, amet provident excepturi omnis animi architecto, necessitatibus dolorem minus a placeat. Numquam consequatur quod, vero magnam aspernatur voluptates ipsum animi nemo nulla! Animi ut delectus commodi dolor obcaecati officiis. Repellendus dignissimos commodi sint et rem incidunt totam voluptate quod culpa iure minus nesciunt est tempore, nostrum debitis, odio architecto repudiandae fugiat provident consectetur. Animi inventore tenetur repellendus ad magni ex voluptatibus a mollitia, explicabo asperiores qui illo aspernatur quod aliquid maxime culpa cumque aperiam quasi quisquam. Fugit facere dolorum corporis quis vel ipsum deserunt error?</p>
-            <p className={s.ptext}>Lorem ipsum dolor sit amet consectetur adipisicing elit. Corrupti adipisci ratione voluptate temporibus quos consequuntur, amet provident excepturi omnis animi architecto, necessitatibus dolorem minus a placeat. Numquam consequatur quod, vero magnam aspernatur voluptates ipsum animi nemo nulla! Animi ut delectus commodi dolor obcaecati officiis. Repellendus dignissimos commodi sint et rem incidunt totam voluptate quod culpa iure minus nesciunt est tempore, nostrum debitis, odio architecto repudiandae fugiat provident consectetur. Animi inventore tenetur repellendus ad magni ex voluptatibus a mollitia, explicabo asperiores qui illo aspernatur quod aliquid maxime culpa cumque aperiam quasi quisquam. Fugit facere dolorum corporis quis vel ipsum deserunt error?</p>
-            <p className={s.ptext}>Lorem ipsum dolor sit amet consectetur adipisicing elit. Corrupti adipisci ratione voluptate temporibus quos consequuntur, amet provident excepturi omnis animi architecto, necessitatibus dolorem minus a placeat. Numquam consequatur quod, vero magnam aspernatur voluptates ipsum animi nemo nulla! Animi ut delectus commodi dolor obcaecati officiis. Repellendus dignissimos commodi sint et rem incidunt totam voluptate quod culpa iure minus nesciunt est tempore, nostrum debitis, odio architecto repudiandae fugiat provident consectetur. Animi inventore tenetur repellendus ad magni ex voluptatibus a mollitia, explicabo asperiores qui illo aspernatur quod aliquid maxime culpa cumque aperiam quasi quisquam. Fugit facere dolorum corporis quis vel ipsum deserunt error?</p>
-            <p className={s.ptext}>Lorem ipsum dolor sit amet consectetur adipisicing elit. Corrupti adipisci ratione voluptate temporibus quos consequuntur, amet provident excepturi omnis animi architecto, necessitatibus dolorem minus a placeat. Numquam consequatur quod, vero magnam aspernatur voluptates ipsum animi nemo nulla! Animi ut delectus commodi dolor obcaecati officiis. Repellendus dignissimos commodi sint et rem incidunt totam voluptate quod culpa iure minus nesciunt est tempore, nostrum debitis, odio architecto repudiandae fugiat provident consectetur. Animi inventore tenetur repellendus ad magni ex voluptatibus a mollitia, explicabo asperiores qui illo aspernatur quod aliquid maxime culpa cumque aperiam quasi quisquam. Fugit facere dolorum corporis quis vel ipsum deserunt error?</p>
-            <p className={s.ptext}>Lorem ipsum dolor sit amet consectetur adipisicing elit. Corrupti adipisci ratione voluptate temporibus quos consequuntur, amet provident excepturi omnis animi architecto, necessitatibus dolorem minus a placeat. Numquam consequatur quod, vero magnam aspernatur voluptates ipsum animi nemo nulla! Animi ut delectus commodi dolor obcaecati officiis. Repellendus dignissimos commodi sint et rem incidunt totam voluptate quod culpa iure minus nesciunt est tempore, nostrum debitis, odio architecto repudiandae fugiat provident consectetur. Animi inventore tenetur repellendus ad magni ex voluptatibus a mollitia, explicabo asperiores qui illo aspernatur quod aliquid maxime culpa cumque aperiam quasi quisquam. Fugit facere dolorum corporis quis vel ipsum deserunt error?</p>
-            <p className={s.ptext}>Lorem ipsum dolor sit amet consectetur adipisicing elit. Corrupti adipisci ratione voluptate temporibus quos consequuntur, amet provident excepturi omnis animi architecto, necessitatibus dolorem minus a placeat. Numquam consequatur quod, vero magnam aspernatur voluptates ipsum animi nemo nulla! Animi ut delectus commodi dolor obcaecati officiis. Repellendus dignissimos commodi sint et rem incidunt totam voluptate quod culpa iure minus nesciunt est tempore, nostrum debitis, odio architecto repudiandae fugiat provident consectetur. Animi inventore tenetur repellendus ad magni ex voluptatibus a mollitia, explicabo asperiores qui illo aspernatur quod aliquid maxime culpa cumque aperiam quasi quisquam. Fugit facere dolorum corporis quis vel ipsum deserunt error?</p>
-            </div> */}
+              <div id={s.body}>
+                <span id={s.line} />
+                <h2>About this article</h2>
+                <img
+                  src={require('../../assets/img/ecommerce.jpg')}
+                  style={{ marginTop: '2rem' }}
+                />
+                <p className={s.ptext}>{articleTxt ? articleTxt : ''}</p>
+              </div>
               <div id={s.articleImages}>
+                <span id={s.mline} />
+                <h2 style={{ marginBottom: '2rem' }}>Images</h2>
                 <div id={s.articleImagesMain} onClick={handleSlider}>
                   <i id={s.aL} class="fas fa-chevron-left"></i>
                   <img
@@ -457,14 +738,14 @@ const ArticleSite = () => {
                 <div id={s.commentsHeader}>
                   <span id={s.cL}></span>
                   <h2>
-                    Comments <span>29</span>
+                    Comments <span>{comLength ? comLength : 0}</span>
                   </h2>
                   <div id={s.commentForm}>
                     <textarea
                       id={s.commentEnter}
                       ref={commentEnter}
                       maxLength="500"
-                      placeholder="Type in your comment"
+                      placeholder="Type in your comment..."
                       name="textarea"
                     ></textarea>
                     <div id={s.fB}>
@@ -483,7 +764,7 @@ const ArticleSite = () => {
                   {commentsState.map((comm, i) => {
                     return (
                       <MainComment
-                        key={uuid()}
+                        key={i}
                         ky={comm.ky}
                         usr={comm.user}
                         txt={comm.text}
