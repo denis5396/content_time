@@ -17,6 +17,8 @@ const ArticleSite = () => {
   const overlayImg = useRef();
   const comments = useRef();
   const commentEnter = useRef();
+  const designTitle = useRef();
+  const optDiv = useRef();
 
   let thumbImgs = useRef();
 
@@ -31,6 +33,9 @@ const ArticleSite = () => {
   const [articleTxt, setArticleTxt] = useState('');
   const [articleCategory, setArticleCategory] = useState('');
   const [comLength, setComLength] = useState(0);
+
+  // bcuz on rerender cnt would be zero so i had to make it stateful
+  const [cnt, setCnt] = useState(0);
 
   let url = undefined;
   let queryParam = '';
@@ -98,12 +103,14 @@ const ArticleSite = () => {
     });
     if (window.innerWidth <= 500) {
       const height = scrollHeightOne.current.children[1].children[2].height;
-      mainImg.current.style.height = height;
+      mainImg.current.parentElement.style.height = height;
     }
     if (window.innerWidth >= 1400) {
-      const height = scrollHeightOne.current.children[1].children[2].height;
-      // console.log(mainImg.current.parentElement);
-      mainImg.current.parentElement.style.height = `${height}px`;
+      if (scrollHeightOne.current) {
+        const height = scrollHeightOne.current.children[1].children[2].height;
+        console.log(mainImg.current.parentElement);
+        mainImg.current.parentElement.style.height = `${height} px`;
+      }
     }
     console.log(queryParam);
     console.log(url);
@@ -111,8 +118,38 @@ const ArticleSite = () => {
   }, []);
   useEffect(() => {
     handleScroll();
-    // console.log(articleTitle);
+    // console.log(articleTitle);{}
   });
+
+  useEffect(() => {
+    if (articleCategory) {
+      console.log(articleCategory);
+      if (window.innerWidth <= 779) {
+        console.log(articleCategory);
+        scrollOffset.current.children[0].style.backgroundColor =
+          articleCategory === 'news'
+            ? '#ff005c'
+            : articleCategory === 'sports'
+            ? '#ffc000'
+            : articleCategory === 'lifestyle'
+            ? '#673ab7'
+            : articleCategory === 'technology'
+            ? '#07b0d7'
+            : 'initial';
+        scrollOffset.current.children[1].style.backgroundColor =
+          articleCategory === 'news'
+            ? '#ff005c'
+            : articleCategory === 'sports'
+            ? '#ffc000'
+            : articleCategory === 'lifestyle'
+            ? '#673ab7'
+            : articleCategory === 'technology'
+            ? '#07b0d7'
+            : 'initial';
+      }
+    }
+  }, [articleCategory]);
+
   useEffect(() => {
     if (commentsState.length > 0) {
       console.log(commentsState);
@@ -229,6 +266,42 @@ const ArticleSite = () => {
     }
   }, [arr]);
 
+  const handleOrientation = () => {
+    console.log('changed');
+    if (articleCategory) {
+      console.log(articleCategory);
+      if (window.screen.width <= 779) {
+        console.log('changed2');
+        if (scrollOffset.current) {
+          scrollOffset.current.children[0].style.backgroundColor =
+            articleCategory === 'news'
+              ? '#ff005c'
+              : articleCategory === 'sports'
+              ? '#ffc000'
+              : articleCategory === 'lifestyle'
+              ? '#673ab7'
+              : articleCategory === 'technology'
+              ? '#07b0d7'
+              : 'initial';
+          scrollOffset.current.children[1].style.backgroundColor =
+            articleCategory === 'news'
+              ? '#ff005c'
+              : articleCategory === 'sports'
+              ? '#ffc000'
+              : articleCategory === 'lifestyle'
+              ? '#673ab7'
+              : articleCategory === 'technology'
+              ? '#07b0d7'
+              : 'initial';
+        }
+      } else if (window.screen.width >= 780) {
+        if (scrollOffset.current) {
+          scrollOffset.current.children[0].style.backgroundColor = 'initial';
+        }
+      }
+    }
+  };
+  window.addEventListener('orientationchange', handleOrientation);
   const handleScroll = () => {
     let totalHeight = scrollHeightOne.current.scrollHeight;
     let offSet = Math.abs(
@@ -241,15 +314,19 @@ const ArticleSite = () => {
       progressBar.current.style.height = progressHeight + '%';
     }
   };
-  let count = 0;
+
   const handleSlider = (e) => {
+    let count = cnt;
     const { id } = e.target;
     console.log(thumbImgs[count].style.border);
+    console.log(count);
     if (id.includes('aL')) {
       if (count === 0) {
         count = thumbImgs.length - 1;
+        setCnt(count);
       } else {
         count--;
+        setCnt(count);
       }
       if (count === thumbImgs.length - 1) {
         thumbImgs[0].style.border = 'none';
@@ -260,8 +337,11 @@ const ArticleSite = () => {
       mainImg.current.src = thumbImgs[count].src;
     } else if (id.includes('aR')) {
       count++;
+      setCnt(count);
+      console.log(count);
       if (count === thumbImgs.length) {
         count = 0;
+        setCnt(0);
       }
       if (count === 0) {
         thumbImgs[thumbImgs.length - 1].style.border = 'none';
@@ -281,6 +361,7 @@ const ArticleSite = () => {
   };
 
   const handleThumbnail = (e) => {
+    let count = cnt;
     if (e.target.src) {
       console.log(e.target.src);
       thumbImgs.forEach((thumbImg) => {
@@ -290,6 +371,7 @@ const ArticleSite = () => {
         if (thumbImg.src === e.target.src) {
           console.log(idx);
           count = idx;
+          setCnt(count);
           mainImg.current.src = e.target.src;
           e.target.style.border = '0.3rem solid lightseagreen';
         }
@@ -303,23 +385,64 @@ const ArticleSite = () => {
   };
 
   const removeOverlay = (e) => {
+    let count = cnt;
+    console.log(e.target);
     const { id } = e.target;
     if (id.includes('overlay') && e.target.nodeName !== 'IMG') {
       overlay.current.style.display = 'none';
     }
     if (id.includes('oR')) {
       count++;
+      setCnt(count);
       if (count === thumbImgs.length) {
         count = 0;
+        setCnt(0);
       }
       overlayImg.current.src = thumbImgs[count].src;
     } else if (id.includes('oL')) {
       if (count === 0) {
         count = thumbImgs.length - 1;
+        setCnt(count);
       } else {
         count--;
+        setCnt(count);
       }
       overlayImg.current.src = thumbImgs[count].src;
+    }
+  };
+
+  const editTitles = (e) => {
+    console.log(designTitle.current.children[1]);
+    console.log(e.target.textContent);
+    if (designTitle.current.children[0].contains(e.target)) {
+      setTitle(e.target.value);
+    } else if (designTitle.current.children[1].contains(e.target)) {
+      setSubTitle(e.target.value);
+    }
+  };
+
+  const openOptions = () => {
+    if (optDiv.current) {
+      if (!optDiv.current.style.display) {
+        optDiv.current.style.display = 'block';
+      } else if (optDiv.current.style.display === 'none') {
+        optDiv.current.style.display = 'block';
+      } else {
+        optDiv.current.style.display = 'none';
+      }
+    }
+  };
+
+  const removeOpt = (e) => {
+    const { id } = e.target;
+    console.log(e.target);
+    if (
+      !id.includes('optDiv') &&
+      !id.includes('dot') &&
+      !id.includes('options') &&
+      !optDiv.current.contains(e.target)
+    ) {
+      optDiv.current.style.display = 'none';
     }
   };
 
@@ -335,7 +458,7 @@ const ArticleSite = () => {
         <i id={s.oR} class="fas fa-chevron-right"></i>
         <i id={s.oL} class="fas fa-chevron-left"></i>
       </div>
-      <div id={s.articleId}>
+      <div id={s.articleId} onClick={(e) => removeOpt(e)}>
         <div
           id={s.articleDesign}
           style={{
@@ -364,12 +487,43 @@ const ArticleSite = () => {
             >
               <i class="fas fa-arrow-left"></i> Back to articles
             </span>
-            <span id={s.options}>
+            <span id={s.options} onClick={openOptions}>
               <span id={s.dot} />
             </span>
-            <div id={s.designTitle}>
-              <h1>{title ? title : ''}</h1>
-              <h5>{subTitle ? subTitle : ''}</h5>
+            <div id={s.optDiv} ref={optDiv}>
+              <ul>
+                <li>Change Category</li>
+                <select>
+                  <option>News</option>
+                  <option>Sports</option>
+                  <option>Lifestyle</option>
+                  <option>Technology</option>
+                </select>
+                <li>Save Changes</li>
+              </ul>
+            </div>
+            <div id={s.designTitle} ref={designTitle}>
+              {user === 'admin' ? (
+                <>
+                  <textarea
+                    spellCheck={false}
+                    autoFocus
+                    onChange={editTitles}
+                    value={title ? title : ''}
+                  />
+                  <textarea
+                    spellCheck={false}
+                    autoFocus
+                    onChange={editTitles}
+                    value={subTitle ? subTitle : ''}
+                  ></textarea>
+                </>
+              ) : (
+                <>
+                  <h1>{title ? title : ''}</h1>
+                  <h5>{subTitle ? subTitle : ''}</h5>
+                </>
+              )}
             </div>
             {articleCategory === 'news' ? (
               <span id={s.o}>
