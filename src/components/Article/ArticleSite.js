@@ -1,6 +1,6 @@
 import React, { memo, useContext, useEffect, useRef, useState } from 'react';
 import { UserContext } from '../../contexts/User';
-import { db } from '../../firebase';
+import { db, storage } from '../../firebase';
 import { v1 as uuid } from 'uuid';
 import s from './ArticleSite.module.css';
 import MainComment from './comments/MainComment';
@@ -19,6 +19,7 @@ const ArticleSite = () => {
   const commentEnter = useRef();
   const designTitle = useRef();
   const optDiv = useRef();
+  const changeRemove = useRef();
 
   let thumbImgs = useRef();
 
@@ -36,6 +37,11 @@ const ArticleSite = () => {
 
   // bcuz on rerender cnt would be zero so i had to make it stateful
   const [cnt, setCnt] = useState(0);
+
+  const [adding, setAdding] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [removed, setRemoved] = useState(false);
+  const [thumbImgRemoved, setThumbImgRemoved] = useState(false);
 
   let url = undefined;
   let queryParam = '';
@@ -98,6 +104,7 @@ const ArticleSite = () => {
       if (arr.length === imageUrls.length) {
         setArr([...imageUrls]);
         mainImg.current.src = imageUrls[0];
+
         setArr([...imageUrls]);
       }
     });
@@ -260,9 +267,36 @@ const ArticleSite = () => {
   };
 
   useEffect(() => {
-    if (arr && thumbImgs[0]) {
+    if (arr.length > 0) {
+      changeRemove.current.style.display = 'grid';
+      changeRemove.current.nextSibling.style.display = 'block';
+    }
+    if (arr.length === 1 && thumbImgs[0] && adding) {
+      thumbImgs[0].style.border = '0.3rem solid lightseagreen';
+    }
+    if (arr && thumbImgs[0] && !adding) {
       thumbImgs[0].style.border = '0.3rem solid lightseagreen';
       console.log(thumbImgs);
+    }
+    if (arr && thumbImgs[0] && removed) {
+      let bool = false;
+      thumbImgs.forEach((img, idx) => {
+        if (img.style.border !== 'none' && !bool) {
+          bool = true;
+          mainImg.current.src = img.src;
+        }
+        if (!bool && idx === thumbImgs.length - 1) {
+          thumbImgs[idx].style.border = '0.3rem solid lightseagreen';
+          mainImg.current.src = thumbImgs[idx].src;
+          setCnt(thumbImgs.length - 1);
+        }
+      });
+    }
+    if (arr.length === 0 && thumbImgs.length === 0 && removed) {
+      changeRemove.current.style.display = 'none';
+      changeRemove.current.nextSibling.style.display = 'none';
+      setThumbImgRemoved(true);
+      mainImg.current.src = '';
     }
   }, [arr]);
 
@@ -318,38 +352,52 @@ const ArticleSite = () => {
   const handleSlider = (e) => {
     let count = cnt;
     const { id } = e.target;
-    console.log(thumbImgs[count].style.border);
-    console.log(count);
-    if (id.includes('aL')) {
-      if (count === 0) {
-        count = thumbImgs.length - 1;
+    // console.log(thumbImgs[count].style.border);
+    // console.log(count);
+    if (thumbImgs.length !== 0) {
+      if (id.includes('aL') && arr.length !== 1) {
+        if (count === 0) {
+          count = thumbImgs.length - 1;
+          setCnt(count);
+        } else {
+          count--;
+          setCnt(count);
+        }
+        if (count === thumbImgs.length - 1) {
+          thumbImgs[0].style.border = 'none';
+        } else {
+          thumbImgs[count + 1].style.border = 'none';
+        }
+        thumbImgs[count].style.border = '0.3rem solid lightseagreen';
+        mainImg.current.src = thumbImgs[count].src;
+      } else if (id.includes('aR') && arr.length !== 1) {
+        count++;
         setCnt(count);
-      } else {
-        count--;
-        setCnt(count);
+        console.log(count);
+        console.log(thumbImgs.length);
+        console.log(thumbImgs[0].style.border);
+        if (
+          count === thumbImgs.length &&
+          thumbImgs[thumbImgs.length - 1].style.border !== ''
+        ) {
+          count = 0;
+          setCnt(0);
+        } else if (
+          // handle last img active removed then added new one and click next into not undefined
+          count === thumbImgs.length &&
+          thumbImgs[thumbImgs.length - 1].style.border === ''
+        ) {
+          count = thumbImgs.length - 1;
+          setCnt(count);
+        }
+        if (count === 0) {
+          thumbImgs[thumbImgs.length - 1].style.border = 'none';
+        } else {
+          thumbImgs[count - 1].style.border = 'none';
+        }
+        thumbImgs[count].style.border = '0.3rem solid lightseagreen';
+        mainImg.current.src = thumbImgs[count].src;
       }
-      if (count === thumbImgs.length - 1) {
-        thumbImgs[0].style.border = 'none';
-      } else {
-        thumbImgs[count + 1].style.border = 'none';
-      }
-      thumbImgs[count].style.border = '0.3rem solid lightseagreen';
-      mainImg.current.src = thumbImgs[count].src;
-    } else if (id.includes('aR')) {
-      count++;
-      setCnt(count);
-      console.log(count);
-      if (count === thumbImgs.length) {
-        count = 0;
-        setCnt(0);
-      }
-      if (count === 0) {
-        thumbImgs[thumbImgs.length - 1].style.border = 'none';
-      } else {
-        thumbImgs[count - 1].style.border = 'none';
-      }
-      thumbImgs[count].style.border = '0.3rem solid lightseagreen';
-      mainImg.current.src = thumbImgs[count].src;
     }
   };
 
@@ -446,6 +494,136 @@ const ArticleSite = () => {
     }
   };
 
+  const handleSelect = (e) => {
+    console.log(e.target.value);
+    setArticleCategory(e.target.value);
+  };
+
+  const adjustTxtarea = (e) => {
+    e.target.style.height = '1px';
+    e.target.style.height = 25 + e.target.scrollHeight + 'px';
+    console.log(e.target.value);
+    setArticleTxt(e.target.value);
+  };
+
+  const handleChangePic = (e) => {
+    const { files } = e.target;
+    const oldUrl = mainImg.current.src;
+    let num = 0;
+    setLoading(true);
+    if (files[0]) {
+      const uploadTask = storage.ref(`images/${files[0].name}`).put(files[0]);
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {},
+        (error) => {
+          console.log(error);
+        },
+        () => {
+          storage
+            .ref('images')
+            .child(files[0].name)
+            .getDownloadURL()
+            .then((url) => {
+              setLoading(false);
+              setAdding(true);
+              const newArr = [];
+
+              thumbImgs.forEach((img, idx) => {
+                console.log(img);
+                if (img) {
+                  newArr[idx] = thumbImgs[idx].src;
+                  console.log(oldUrl);
+                  if (oldUrl === img.src) {
+                    newArr[idx] = url;
+                  }
+                }
+              });
+              mainImg.current.src = url;
+
+              console.log(newArr);
+              setArr([...newArr]);
+            });
+        }
+      );
+    }
+  };
+  const handleRemovePic = () => {
+    const oldUrl = mainImg.current.src;
+    console.log(oldUrl);
+    const newArr = [...arr];
+    let deletedPosition = 0;
+    newArr.forEach((img, idx) => {
+      console.log(img);
+      if (img) {
+        if (oldUrl === img) {
+          newArr.splice(idx, 1);
+          deletedPosition = idx;
+        }
+      }
+    });
+    setRemoved(true);
+    console.log(newArr);
+    setArr([...newArr]);
+  };
+
+  const handleMultipleImages = (e) => {
+    const { files } = e.target;
+    const arrFiles = [];
+    console.log('haha');
+    let countFiles = 0;
+    if (files) {
+      for (let file in files) {
+        console.log(files[file]);
+        if (countFiles < files.length) {
+          arrFiles.push(files[file]);
+        }
+        countFiles++;
+      }
+    }
+    let bool = false;
+    // alert('anything');
+    arrFiles.forEach((img) => {
+      const uploadTask = storage.ref(`images/${img.name}`).put(img);
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {},
+        (error) => {
+          console.log(error);
+        },
+        () => {
+          storage
+            .ref('images')
+            .child(img.name)
+            .getDownloadURL()
+            .then((url) => {
+              bool = true;
+              setAdding(true);
+              setArr((prevArr) => {
+                return [...prevArr, url];
+              });
+            });
+        }
+      );
+      // if (!bool) {
+      //   alert('xd');
+      //   storage
+      //     .ref('images')
+      //     .child(img.name)
+      //     .getDownloadURL()
+      //     .then((url) => {
+      //       alert(url);
+      //       // setAdding(true);
+      //       // setArr((prevArr) => {
+      //       //   return [...prevArr, url];
+      //       // });
+      //     });
+      // }
+    });
+    e.target.value = '';
+    console.log(arrFiles);
+  };
+
   thumbImgs = undefined;
   if (!thumbImgs) {
     thumbImgs = [];
@@ -493,11 +671,14 @@ const ArticleSite = () => {
             <div id={s.optDiv} ref={optDiv}>
               <ul>
                 <li>Change Category</li>
-                <select>
-                  <option>News</option>
-                  <option>Sports</option>
-                  <option>Lifestyle</option>
-                  <option>Technology</option>
+                <select
+                  value={articleCategory}
+                  onChange={(e) => handleSelect(e)}
+                >
+                  <option value="news">News</option>
+                  <option value="sports">Sports</option>
+                  <option value="lifestyle">Lifestyle</option>
+                  <option value="technology">Technology</option>
                 </select>
                 <li>Save Changes</li>
               </ul>
@@ -510,12 +691,36 @@ const ArticleSite = () => {
                     autoFocus
                     onChange={editTitles}
                     value={title ? title : ''}
+                    style={{
+                      backgroundColor:
+                        articleCategory === 'news'
+                          ? '#ff005c'
+                          : articleCategory === 'sports'
+                          ? '#ffc000'
+                          : articleCategory === 'lifestyle'
+                          ? '#673ab7'
+                          : articleCategory === 'technology'
+                          ? '#07b0d7'
+                          : 'initial',
+                    }}
                   />
                   <textarea
                     spellCheck={false}
                     autoFocus
                     onChange={editTitles}
                     value={subTitle ? subTitle : ''}
+                    style={{
+                      backgroundColor:
+                        articleCategory === 'news'
+                          ? '#ff005c'
+                          : articleCategory === 'sports'
+                          ? '#ffc000'
+                          : articleCategory === 'lifestyle'
+                          ? '#673ab7'
+                          : articleCategory === 'technology'
+                          ? '#07b0d7'
+                          : 'initial',
+                    }}
                   ></textarea>
                 </>
               ) : (
@@ -848,19 +1053,60 @@ const ArticleSite = () => {
                   src={require('../../assets/img/ecommerce.jpg')}
                   style={{ marginTop: '2rem' }}
                 />
-                <p className={s.ptext}>{articleTxt ? articleTxt : ''}</p>
+                {user === 'admin' ? (
+                  <textarea
+                    id={s.txtAr}
+                    onChange={(e) => adjustTxtarea(e)}
+                    style={{ lineHeight: '2.6rem' }}
+                    spellCheck={false}
+                    value={articleTxt}
+                  ></textarea>
+                ) : (
+                  <p className={s.ptext}>{articleTxt ? articleTxt : ''}</p>
+                )}
               </div>
               <div id={s.articleImages}>
                 <span id={s.mline} />
                 <h2 style={{ marginBottom: '2rem' }}>Images</h2>
+                {user === 'admin' ? (
+                  <div id={s.addImagesParent}>
+                    <div id={s.addImages}>
+                      <button>+</button>
+                      <input
+                        type="file"
+                        onChange={(e) => handleMultipleImages(e)}
+                        accept="image/*"
+                        multiple={true}
+                      />
+                    </div>
+                    <span id={s.addMoreSpan}>Add more images</span>
+                  </div>
+                ) : null}
+                {user === 'admin' ? (
+                  <div id={s.changeRemove} ref={changeRemove}>
+                    <div id={s.change}>
+                      <button id={s.changePic}>Change Image</button>
+                      <input type="file" onChange={(e) => handleChangePic(e)} />
+                    </div>
+                    <div id={s.remove}>
+                      <button id={s.removePic} onClick={handleRemovePic}>
+                        Remove Image
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
                 <div id={s.articleImagesMain} onClick={handleSlider}>
                   <i id={s.aL} class="fas fa-chevron-left"></i>
-                  <img
-                    src={imageUrls[0] ? imageUrls[0] : ''}
-                    ref={mainImg}
-                    onMouseEnter={showExpand}
-                    onMouseLeave={hideExpand}
-                  />
+                  {loading ? (
+                    <div id={s.spinnerImg}></div>
+                  ) : (
+                    <img
+                      src={imageUrls[0] ? imageUrls[0] : ''}
+                      ref={mainImg}
+                      onMouseEnter={showExpand}
+                      onMouseLeave={hideExpand}
+                    />
+                  )}
                   <i id={s.aR} class="fas fa-chevron-right"></i>
                   <i
                     id={s.expand}
