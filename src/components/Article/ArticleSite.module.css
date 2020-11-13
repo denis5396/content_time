@@ -800,6 +800,13 @@ img {
   display: inline-block;
   cursor: pointer;
 }
+#articleImagesRest #spinnerThumb {
+  width: 32%;
+  margin-right: 0.5rem;
+  height: 7rem;
+  display: inline-block;
+  cursor: pointer;
+}
 #expand {
   top: 50%;
   left: 50%;

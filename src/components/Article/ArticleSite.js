@@ -42,6 +42,9 @@ const ArticleSite = () => {
   const [loading, setLoading] = useState(false);
   const [removed, setRemoved] = useState(false);
   const [thumbImgRemoved, setThumbImgRemoved] = useState(false);
+  const [addedLast, setAddedLast] = useState(0);
+  const [loadingImg, setLoadingImg] = useState([]);
+  const [changed, setChanged] = useState(false);
 
   let url = undefined;
   let queryParam = '';
@@ -265,23 +268,86 @@ const ArticleSite = () => {
       commentEnter.current.value = '';
     }
   };
+  useEffect(() => {
+    thumbImgs.forEach((img, idx) => {
+      if (img.style.border !== 'none' && img.style.border !== '') {
+        if (mainImg.current) {
+          alert('why');
+          mainImg.current.src = arr[idx];
+        }
+      }
+    });
+    // HANDLE DELETE ALL THEN ADD ALL MAINIMGSRC SPINNER
+    let tst = false;
+    arr.forEach((img, idx) => {
+      if (
+        img !== 'https://media.giphy.com/media/3ov9jKQbfWvDNu2Z0s/giphy.gif'
+      ) {
+        tst = true;
+      }
+      if (idx === arr.length - 1 && !tst) {
+        mainImg.current.src =
+          'https://media.giphy.com/media/3ov9jKQbfWvDNu2Z0s/giphy.gif';
+      }
+    });
+    if (changed) {
+      if (changed && arr.length !== 1) {
+        thumbImgs[0].style.border = '';
+      }
+    }
+  }, [loading]);
 
   useEffect(() => {
+    if (removed) {
+      if (arr.length === 1 && thumbImgs[0]) {
+        thumbImgs[0].style.border = '0.3rem solid lightseagreen';
+      }
+    }
+  }, [removed]);
+
+  useEffect(() => {
+    if (arr.length === addedLast) {
+      setLoading(false);
+      const ldImg = [];
+      loadingImg.forEach((loadImg, idx) => {
+        ldImg[idx] = loadImg;
+        if (loadImg) {
+          ldImg[idx] = false;
+        }
+      });
+      setLoadingImg([...ldImg]);
+    }
     if (arr.length > 0) {
       changeRemove.current.style.display = 'grid';
       changeRemove.current.nextSibling.style.display = 'block';
+    }
+    if (arr.length > 1 && thumbImgs[0] && changed) {
+      if (mainImg.current.src === thumbImgs[0].src) {
+        thumbImgs[0].style.border = '0.3rem solid lightseagreen';
+      } else {
+        thumbImgs[0].style.border = '';
+      }
     }
     if (arr.length === 1 && thumbImgs[0] && adding) {
       thumbImgs[0].style.border = '0.3rem solid lightseagreen';
     }
     if (arr && thumbImgs[0] && !adding) {
-      thumbImgs[0].style.border = '0.3rem solid lightseagreen';
+      if (mainImg.current.src !== thumbImgs[0].src) {
+        if (arr.length === 1) {
+          thumbImgs[0].style.border = '0.3rem solid lightseagreen';
+        } else {
+          thumbImgs[0].style.border = '';
+        }
+      } else {
+        thumbImgs[0].style.border = '0.3rem solid lightseagreen';
+      }
       console.log(thumbImgs);
     }
-    if (arr && thumbImgs[0] && removed) {
+
+    if (arr && thumbImgs[0] && removed && !loading) {
       let bool = false;
       thumbImgs.forEach((img, idx) => {
-        if (img.style.border !== 'none' && !bool) {
+        if (img.style.border !== 'none' && img.style.border !== '' && !bool) {
           bool = true;
           mainImg.current.src = img.src;
         }
@@ -512,6 +578,14 @@ const ArticleSite = () => {
     let num = 0;
     setLoading(true);
     if (files[0]) {
+      const thumbArr = [...arr];
+      thumbImgs.forEach((img, idx) => {
+        if (img.style.border !== 'none' && img.style.border !== '') {
+          thumbArr[idx] =
+            'https://media.giphy.com/media/3ov9jKQbfWvDNu2Z0s/giphy.gif';
+          setArr([...thumbArr]);
+        }
+      });
       const uploadTask = storage.ref(`images/${files[0].name}`).put(files[0]);
       uploadTask.on(
         'state_changed',
@@ -527,19 +601,21 @@ const ArticleSite = () => {
             .then((url) => {
               setLoading(false);
               setAdding(true);
-              const newArr = [];
+              setChanged(true);
+              const newArr = [...thumbArr];
 
               thumbImgs.forEach((img, idx) => {
-                console.log(img);
                 if (img) {
-                  newArr[idx] = thumbImgs[idx].src;
-                  console.log(oldUrl);
-                  if (oldUrl === img.src) {
+                  if (
+                    img.src ===
+                    'https://media.giphy.com/media/3ov9jKQbfWvDNu2Z0s/giphy.gif'
+                  ) {
                     newArr[idx] = url;
                   }
                 }
               });
               mainImg.current.src = url;
+              thumbImgs[0].style.border = 'none';
 
               console.log(newArr);
               setArr([...newArr]);
@@ -570,19 +646,37 @@ const ArticleSite = () => {
   const handleMultipleImages = (e) => {
     const { files } = e.target;
     const arrFiles = [];
-    console.log('haha');
     let countFiles = 0;
+    let savePos = 0;
+    const loadingImgArray = [];
+    arr.forEach((ar, idx) => {
+      loadingImgArray[idx] = false;
+      savePos = idx;
+    });
+
     if (files) {
+      setLoading(true);
       for (let file in files) {
         console.log(files[file]);
+        savePos++;
         if (countFiles < files.length) {
           arrFiles.push(files[file]);
+          loadingImgArray[savePos] = true;
+          setArr((prevArr) => {
+            return [
+              ...prevArr,
+              'https://media.giphy.com/media/3ov9jKQbfWvDNu2Z0s/giphy.gif',
+            ];
+          });
         }
         countFiles++;
       }
     }
-    let bool = false;
-    // alert('anything');
+    const length1 = arr.length;
+    const length2 = arrFiles.length;
+    const prvA = [...arr];
+    setLoadingImg([...loadingImgArray]);
+    setAddedLast(arrFiles.length + arr.length);
     arrFiles.forEach((img) => {
       const uploadTask = storage.ref(`images/${img.name}`).put(img);
       uploadTask.on(
@@ -597,11 +691,11 @@ const ArticleSite = () => {
             .child(img.name)
             .getDownloadURL()
             .then((url) => {
-              bool = true;
+              prvA.push(url);
+              if (prvA.length === length1 + length2) {
+                setArr([...prvA]);
+              }
               setAdding(true);
-              setArr((prevArr) => {
-                return [...prevArr, url];
-              });
             });
         }
       );
@@ -1097,7 +1191,7 @@ const ArticleSite = () => {
                 ) : null}
                 <div id={s.articleImagesMain} onClick={handleSlider}>
                   <i id={s.aL} class="fas fa-chevron-left"></i>
-                  {loading ? (
+                  {/* {loading ? (
                     <div id={s.spinnerImg}></div>
                   ) : (
                     <img
@@ -1106,7 +1200,17 @@ const ArticleSite = () => {
                       onMouseEnter={showExpand}
                       onMouseLeave={hideExpand}
                     />
-                  )}
+                  )} */}
+                  <img
+                    src={
+                      loading
+                        ? 'https://media.giphy.com/media/3ov9jKQbfWvDNu2Z0s/giphy.gif'
+                        : imageUrls[0]
+                    }
+                    ref={mainImg}
+                    onMouseEnter={showExpand}
+                    onMouseLeave={hideExpand}
+                  />
                   <i id={s.aR} class="fas fa-chevron-right"></i>
                   <i
                     id={s.expand}
@@ -1123,13 +1227,34 @@ const ArticleSite = () => {
                 >
                   {arr
                     ? arr.map((img, i) => (
-                        <img
-                          key={i}
-                          src={img}
-                          ref={(imgs) => {
-                            thumbImgs.push(imgs);
-                          }}
-                        />
+                        <>
+                          {/* {!loading ? (
+                            <img
+                              key={i}
+                              src={img}
+                              ref={(imgs) => {
+                                thumbImgs.push(imgs);
+                              }}
+                            />
+                          ) : (
+                            <img
+                              id={s.spinnerThumb}
+                              style={{ backgroundColor: 'red' }}
+                              src=""
+                            ></img>
+                          )} */}
+                          <img
+                            key={i}
+                            src={
+                              loadingImg[i]
+                                ? 'https://media.giphy.com/media/3ov9jKQbfWvDNu2Z0s/giphy.gif'
+                                : img
+                            }
+                            ref={(imgs) => {
+                              thumbImgs.push(imgs);
+                            }}
+                          />
+                        </>
                       ))
                     : null}
                 </div>
