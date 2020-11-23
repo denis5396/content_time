@@ -619,6 +619,8 @@ const ArticleSite = () => {
   }, [generatePs]);
 
   const adjustTxtarea = (e) => {
+    console.log(e.target);
+    console.log(txtAr.current);
     e.target.style.height = '1px';
     e.target.style.height = 25 + e.target.scrollHeight + 'px';
     console.log(e.target.value);
@@ -657,6 +659,7 @@ const ArticleSite = () => {
         }
         endIdx = i + 1;
         setArticleTxt(txtAr.current.value);
+        setSelStart(txtAr.current.selectionStart);
         if (txtAr.current.value.length === selStart) {
           alert('haha');
         }
@@ -706,9 +709,13 @@ const ArticleSite = () => {
     }
   }, [arrived]);
   useEffect(() => {
-    if (articleTxt) {
+    if (articleTxt && inbetween) {
       console.log(articleTxt.length);
       console.log(selStart);
+      txtAr.current.style.height = '1px';
+      txtAr.current.style.height = 25 + txtAr.current.scrollHeight + 'px';
+      txtAr.current.selectionStart = selStart;
+      txtAr.current.selectionEnd = selStart;
     }
   }, [articleTxt]);
   useEffect(() => {
@@ -801,34 +808,41 @@ const ArticleSite = () => {
         txtAr.current.value[slNm - 1] === '\n' &&
         txtAr.current.value[slNm + 1] !== '\n'
       ) {
-        setSelStart(slNm + 1);
         setInbetween(true);
         alert('yes');
-        const strArr = txtAr.current.value.split('');
-        const slNm = txtAr.current.selectionStart;
-        for (let i = 0; i < strArr.length; i++) {
-          if (slNm === i) {
-            if (strArr[i - 1] === '\n' && strArr[i] === '\n') {
-              alert(strArr[i - 1]); // starri-1 = curr typed word i === cur space where next word will be typed
-              strArr.splice(i - 1, 0, '\n');
-              strArr.splice(i + 1, 0, '\n');
-            }
-          }
-        }
-        console.log(strArr.join(''));
-        setArticleTxt(strArr.join(''));
-      }
-      if (txtAr.current.value[slNm] === '\n' && !inbetween) {
-        // alert('happens');
-        setInbetween(true);
-        const newArr = txtAr.current.value.split('');
-        newArr.splice(slNm, 0, '\n');
-        console.log(newArr);
-        // setArticleTxt(newArr.join(''));
-        // txtAr.current.selectionStart = slNm;
+      } else {
+        setInbetween(false);
       }
     }
   };
+
+  useEffect(() => {
+    if (inbetween) {
+      const strArr = txtAr.current.value.split('');
+      const slNm = txtAr.current.selectionStart;
+      console.log(txtAr.current.value);
+      if (strArr[slNm] === '\n' && strArr[slNm - 1] === '\n') {
+      }
+      setSelStart(slNm + 1);
+      for (let i = 0; i < strArr.length; i++) {
+        console.log(strArr[i]);
+        if (slNm === i) {
+          console.log(strArr[i - 2]); // i-1 curr typed letter
+          console.log(strArr[i]);
+          if (strArr[i - 2] === '\n' && strArr[i] === '\n') {
+            alert(strArr[i - 1]); // starri-1 = curr typed letter i === cur space where next letter will be typed
+            strArr.splice(i - 1, 0, '\n');
+            strArr.splice(i + 1, 0, '\n');
+          }
+        }
+      }
+      console.log(strArr);
+      setArticleTxt(strArr.join(''));
+      txtAr.current.selectionStart = slNm + 1;
+      txtAr.current.style.height = '1px';
+      txtAr.current.style.height = 25 + txtAr.current.scrollHeight + 'px';
+    }
+  }, [inbetween]);
 
   const handleChangePic = (e) => {
     const { files } = e.target;
