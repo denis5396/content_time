@@ -1802,6 +1802,7 @@ img {
   overflow-y: hidden;
   margin-top: 2rem;
   vertical-align: middle;
+  line-height: 1;
 }
 
 /* spinner on img change */

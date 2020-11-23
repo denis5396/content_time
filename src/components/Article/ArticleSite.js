@@ -20,6 +20,7 @@ const ArticleSite = () => {
   const designTitle = useRef();
   const optDiv = useRef();
   const changeRemove = useRef();
+  const txtAr = useRef();
 
   let thumbImgs = useRef();
 
@@ -45,6 +46,16 @@ const ArticleSite = () => {
   const [addedLast, setAddedLast] = useState(0);
   const [loadingImg, setLoadingImg] = useState([]);
   const [changed, setChanged] = useState(false);
+
+  const [enter, setEnter] = useState(false);
+  const [backspace, setBackspace] = useState(false);
+
+  const [generatePs, setGeneratePs] = useState([]);
+  const [arrived, setArrived] = useState(false);
+  const [selStart, setSelStart] = useState(0);
+
+  // when clicked on inbetween empty rows bool state
+  const [inbetween, setInbetween] = useState(false);
 
   let url = undefined;
   let queryParam = '';
@@ -564,12 +575,259 @@ const ArticleSite = () => {
     console.log(e.target.value);
     setArticleCategory(e.target.value);
   };
+  useEffect(() => {
+    // if (enter) {
+    //   // alert(txtAr.current.value.length);
+    //   const str = txtAr.current.value;
+    //   const pArray = [];
+    //   let endIdx = 0;
+    //   for (let i = 0; i < str.length; i++) {
+    //     // if (str[i] !== oldStr[i]) {
+    //     //   alert(i);
+    //     //   pArray.push()
+    //     //   setGeneratePs()
+    //     //   break
+    //     // }
+    //     if (str[i] === '\n') {
+    //       pArray.push(str.slice(endIdx, i));
+    //       setGeneratePs([...pArray]);
+    //       const rest = str.slice(i + 1);
+    //       for (let j = 0; j < rest.length; j++) {
+    //         if (rest[j] === '\n') {
+    //           break;
+    //         } else if (j === rest.length - 1) {
+    //           pArray.push(rest);
+    //           setGeneratePs([...pArray]);
+    //         }
+    //       }
+    //       endIdx = i + 1;
+    //       setArticleTxt(txtAr.current.value);
+    //     }
+    //   }
+    // alert(oldStr.length);
+    // const { value } = txtAr.current;
+    // alert(value.length);
+    // setArticleTxt(txtAr.current.value);
+    // alert(articleTxt.length);
+    // alert(oldStr.length);
+    // }
+  }, [enter]);
+  useEffect(() => {
+    if (generatePs.length > 0) {
+      console.log(generatePs);
+    }
+  }, [generatePs]);
 
   const adjustTxtarea = (e) => {
     e.target.style.height = '1px';
     e.target.style.height = 25 + e.target.scrollHeight + 'px';
     console.log(e.target.value);
-    setArticleTxt(e.target.value);
+    if (!enter) {
+      setArticleTxt(e.target.value);
+    }
+    if (enter) {
+      setArticleTxt(e.target.value);
+      if (
+        txtAr.current.value[selStart + 1] === '\n' &&
+        txtAr.current.value[selStart + 2] === '\n' &&
+        txtAr.current.value[selStart + 3] === '\n'
+      ) {
+        txtAr.current.selectionEnd = selStart + 2;
+      }
+    }
+    const str = txtAr.current.value;
+    console.log(str);
+    const pArray = [];
+    let endIdx = 0;
+    for (let i = 0; i < str.length; i++) {
+      if (str[i] === '\n') {
+        console.log(str.slice(endIdx, i));
+        if (str.slice(endIdx, i) !== '') {
+          pArray.push(str.slice(endIdx, i));
+        }
+        setGeneratePs([...pArray]);
+        const rest = str.slice(i + 1);
+        for (let j = 0; j < rest.length; j++) {
+          if (rest[j] === '\n') {
+            break;
+          } else if (j === rest.length - 1) {
+            pArray.push(rest);
+            setGeneratePs([...pArray]);
+          }
+        }
+        endIdx = i + 1;
+        setArticleTxt(txtAr.current.value);
+        if (txtAr.current.value.length === selStart) {
+          alert('haha');
+        }
+      }
+    }
+  };
+
+  useEffect(() => {
+    // if (arrived && enter) {
+    //   const placeholderArr = [];
+    //   alert('entered');
+    //   let count = 0;
+    //   console.log(articleTxt);
+    //   for (let i = 0; i < articleTxt.length; i++) {
+    //     placeholderArr[count] = articleTxt[i];
+    //     count++;
+    //     if (articleTxt[i] === '\n') {
+    //       placeholderArr[count] = '\n';
+    //       count++;
+    //     }
+    //   }
+    //   console.log(placeholderArr.join(''));
+    //   setArticleTxt(placeholderArr.join(''));
+    // }
+    // fix copy paste text, sometimes there was no new line after new line on imported txts
+    if (txtAr.current && arrived) {
+      const strin = txtAr.current.value;
+      const newArr = [];
+      let count = 0;
+      for (let i = 0; i < strin.length; i++) {
+        newArr[count] = strin[i];
+        count++;
+        if (strin[i] === '\n') {
+          if (strin[i - 1] !== '\n') {
+            if (strin[i + 1] !== '\n') {
+              newArr[count] = '\n';
+              count++;
+            }
+          }
+          console.log('here');
+        }
+      }
+      setArticleTxt(newArr.join(''));
+      if (selStart !== 0) {
+        // txtAr.current.selectionEnd = selStart;
+      }
+    }
+  }, [arrived]);
+  useEffect(() => {
+    if (articleTxt) {
+      console.log(articleTxt.length);
+      console.log(selStart);
+    }
+  }, [articleTxt]);
+  useEffect(() => {
+    if (selStart !== 0 && enter) {
+      // alert(selStart);
+      // alert(txtAr.current.value.length);
+      let bool = false;
+      console.log(txtAr.current.value);
+      for (let i = 0; i < txtAr.current.value.length; i++) {
+        if (i === selStart) {
+          alert(txtAr.current.value[i]);
+          if (
+            txtAr.current.value[i] === '\n' &&
+            txtAr.current.value[i + 1] === '\n' &&
+            txtAr.current.value[i + 2] !== '\n'
+          ) {
+            alert('rue');
+            bool = true;
+            txtAr.current.selectionEnd = i;
+          } else if (
+            txtAr.current.value[i + 1] === '\n' &&
+            txtAr.current.value[i + 2] === '\n' &&
+            txtAr.current.value[i + 3] === '\n'
+          ) {
+            alert('davaj');
+          }
+          if (selStart + 2 === txtAr.current.value.length) {
+            txtAr.current.selectionStart = txtAr.current.value.length;
+          }
+        }
+        if (!bool) {
+          txtAr.current.selectionStart = txtAr.current.value.length;
+        }
+      }
+    }
+  }, [selStart]);
+  const getEnters = (e) => {
+    if (e.which === 8) {
+      setBackspace(true);
+    }
+    if (e.which === 13) {
+      setEnter(true);
+      let strX = articleTxt;
+      const selNum = txtAr.current.selectionStart;
+      strX += '\n';
+      if (txtAr.current.selectionStart === txtAr.current.value.length) {
+        setArticleTxt(strX);
+      } else if (txtAr.current.selectionStart < txtAr.current.value.length) {
+        alert(txtAr.current.selectionStart);
+        alert(txtAr.current.value.length);
+        console.log(txtAr.current.value.split(''));
+        const newArr = txtAr.current.value.split('');
+        newArr.splice(txtAr.current.selectionStart, 0, '\n');
+        newArr.splice(txtAr.current.selectionStart, 0, '\n');
+        if (newArr[newArr.length - 1] === '\n') {
+          newArr.splice(newArr.length - 1, 1);
+        }
+        console.log(newArr);
+        setArticleTxt(newArr.join(''));
+      }
+      setSelStart(txtAr.current.selectionStart);
+      //  else if (selNum < txtAr.current.value.length) {
+      //   const newArr = [];
+      //   let count = 0;
+      //   let bool = false;
+      //   for (let i = 0; i < strX.length; i++) {
+      //     if (bool) {
+      //       newArr[count] = strX[i - 1];
+      //       count++;
+      //       bool = false;
+      //     }
+      //     if (i !== selNum) {
+      //       newArr[count] = strX[i];
+      //       count++;
+      //     }
+      //     if (i === selNum) {
+      //       bool = true;
+      //       newArr[count] = '\n';
+      //       count++;
+      //     }
+      //   }
+      //   setArticleTxt(newArr.join(''));
+      // }
+    } else {
+      setEnter(false);
+      setArrived(false);
+      const slNm = txtAr.current.selectionStart;
+      if (
+        txtAr.current.value[slNm] === '\n' &&
+        txtAr.current.value[slNm - 1] === '\n' &&
+        txtAr.current.value[slNm + 1] !== '\n'
+      ) {
+        setSelStart(slNm + 1);
+        setInbetween(true);
+        alert('yes');
+        const strArr = txtAr.current.value.split('');
+        const slNm = txtAr.current.selectionStart;
+        for (let i = 0; i < strArr.length; i++) {
+          if (slNm === i) {
+            if (strArr[i - 1] === '\n' && strArr[i] === '\n') {
+              alert(strArr[i - 1]); // starri-1 = curr typed word i === cur space where next word will be typed
+              strArr.splice(i - 1, 0, '\n');
+              strArr.splice(i + 1, 0, '\n');
+            }
+          }
+        }
+        console.log(strArr.join(''));
+        setArticleTxt(strArr.join(''));
+      }
+      if (txtAr.current.value[slNm] === '\n' && !inbetween) {
+        // alert('happens');
+        setInbetween(true);
+        const newArr = txtAr.current.value.split('');
+        newArr.splice(slNm, 0, '\n');
+        console.log(newArr);
+        // setArticleTxt(newArr.join(''));
+        // txtAr.current.selectionStart = slNm;
+      }
+    }
   };
 
   const handleChangePic = (e) => {
@@ -1150,7 +1408,9 @@ const ArticleSite = () => {
                 {user === 'admin' ? (
                   <textarea
                     id={s.txtAr}
+                    ref={txtAr}
                     onChange={(e) => adjustTxtarea(e)}
+                    onKeyDown={(e) => getEnters(e)}
                     style={{ lineHeight: '2.6rem' }}
                     spellCheck={false}
                     value={articleTxt}
