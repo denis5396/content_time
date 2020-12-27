@@ -57,6 +57,17 @@ const ArticleSite = () => {
   // when clicked on inbetween empty rows bool state
   const [inbetween, setInbetween] = useState(false);
 
+  // help with copy paste text to identifiy spaces and put paragraphs into p tags
+  const [prevLength, setPrevLength] = useState(0);
+
+  const [truth, setTruth] = useState(false);
+
+  // recognize pressed key to not reset screen pos
+  const [typed, setTyped] = useState(false);
+  const [typed2, setTyped2] = useState(false);
+  const [typed3, setTyped3] = useState(false);
+  const [typedNumber, setTypedNumber] = useState(0);
+
   let url = undefined;
   let queryParam = '';
   let imageUrls = [];
@@ -135,11 +146,24 @@ const ArticleSite = () => {
     }
     console.log(queryParam);
     console.log(url);
+    if (txtAr.current) {
+      txtAr.current.addEventListener('focus', () => {
+        txtAr.current.blur();
+      });
+    }
     //  scrollOffset.current.style.scrollBehavior = 'smooth'
   }, []);
   useEffect(() => {
-    handleScroll();
-    // console.log(articleTitle);{}
+    alert('rerender');
+    if (typed3) {
+      alert('typedtrica');
+      scrollOffset.current.scrollTop = typedNumber;
+    }
+    // if (typedNumber !== scrollOffset.current.scrollTop) {
+    //   scrollOffset.current.scrollTop = typedNumber;
+    // }
+    // handleScroll();
+    // console.log(articleTitle);
   });
 
   useEffect(() => {
@@ -221,7 +245,6 @@ const ArticleSite = () => {
       console.log(commentsResp);
       let newArr = [];
       let respArr = [];
-      let respArr2 = [];
 
       commentsState.forEach((cs, idx) => {
         newArr[idx] = {};
@@ -328,7 +351,7 @@ const ArticleSite = () => {
       });
       setLoadingImg([...ldImg]);
     }
-    if (arr.length > 0) {
+    if (arr.length > 0 && changeRemove.current) {
       changeRemove.current.style.display = 'grid';
       changeRemove.current.nextSibling.style.display = 'block';
     }
@@ -412,8 +435,18 @@ const ArticleSite = () => {
       }
     }
   };
+
   window.addEventListener('orientationchange', handleOrientation);
   const handleScroll = () => {
+    // if (typedNumber !== 0) {
+    //   alert(typedNumber);
+    // }
+    if (scrollOffset.current.scrollTop !== 0) {
+      alert(scrollOffset.current.scrollTop + 'scrollTop');
+    }
+    if (typedNumber !== 0) {
+      alert(typedNumber + 'typedNumber');
+    }
     let totalHeight = scrollHeightOne.current.scrollHeight;
     let offSet = Math.abs(
       scrollHeightOne.current.getBoundingClientRect().top -
@@ -423,6 +456,32 @@ const ArticleSite = () => {
       let progressHeight = (offSet / (totalHeight - 750)) * 100;
       // console.log(Math.abs(scrollHeightOne.current.getBoundingClientRect().top - scrollHeightOne.current.offsetParent.getBoundingClientRect().top))
       progressBar.current.style.height = progressHeight + '%';
+    }
+    // if (typedNumber !== 0) {
+    //   scrollOffset.current.scrollTop = typedNumber;
+    // }
+    // if (typedNumber !== scrollOffset.current.scrollTop && typedNumber !== 0) {
+    //   scrollOffset.current.scrollTop = typedNumber;
+    // }
+
+    if (
+      typedNumber !== scrollOffset.current.scrollTop &&
+      typedNumber !== 0 &&
+      typed
+    ) {
+      // scrollOffset.current.scrollTop = typedNumber;
+      setTyped(false);
+      setTyped2(true);
+      scrollOffset.current.scrollTop = typedNumber;
+      alert('typed1');
+    }
+    if (typed2 && !typed) {
+      alert('typed2');
+      scrollOffset.current.scrollTop = typedNumber;
+      scrollOffset.current.style.overflow = 'hidden';
+      setTimeout(() => {
+        setTyped2(false);
+      }, 30);
     }
   };
 
@@ -621,6 +680,12 @@ const ArticleSite = () => {
   const adjustTxtarea = (e) => {
     console.log(e.target);
     console.log(txtAr.current);
+    alert('change');
+    alert(scrollOffset.current.scrollTop + ' afterchangescroltop');
+    if (typedNumber !== scrollOffset.current.scrollTop && typed) {
+      alert('gobnojed');
+      setTyped3(true);
+    }
     e.target.style.height = '1px';
     e.target.style.height = 25 + e.target.scrollHeight + 'px';
     console.log(e.target.value);
@@ -636,6 +701,9 @@ const ArticleSite = () => {
       ) {
         txtAr.current.selectionEnd = selStart + 2;
       }
+    }
+    if (prevLength + 1 < e.target.value.length) {
+      setTruth(true);
     }
     const str = txtAr.current.value;
     console.log(str);
@@ -666,6 +734,29 @@ const ArticleSite = () => {
       }
     }
   };
+
+  useEffect(() => {
+    if (truth) {
+      const strArr = txtAr.current.value;
+      const newArr = [];
+      let count = 0;
+      console.log(strArr);
+      for (let i = 0; i < strArr.length; i++) {
+        newArr[count] = strArr[i];
+        count++;
+        if (
+          strArr[i] === '\n' &&
+          strArr[i + 1] !== '\n' &&
+          strArr[i - 1] !== '\n'
+        ) {
+          newArr[count] = '\n';
+          count++;
+        }
+      }
+      console.log(newArr.join(''));
+      setArticleTxt(newArr.join(''));
+    }
+  }, [truth]);
 
   useEffect(() => {
     // if (arrived && enter) {
@@ -709,6 +800,22 @@ const ArticleSite = () => {
     }
   }, [arrived]);
   useEffect(() => {
+    if (txtAr.current && scrollOffset.current) {
+      // scrollOffset.current.scrollTop = 100;
+    }
+    if (txtAr.current) {
+      txtAr.current.style.height = '1px';
+      txtAr.current.style.height = 25 + txtAr.current.scrollHeight + 'px';
+      let totalHeight = txtAr.current.scrollHeight;
+      // scrollHeightOne.current.scrollTop = 0;
+      // txtAr.current.focus();
+      let offSet = Math.abs(
+        scrollHeightOne.current.getBoundingClientRect().top -
+          scrollHeightOne.current.offsetParent.getBoundingClientRect().top
+      );
+    }
+  });
+  useEffect(() => {
     if (articleTxt && inbetween) {
       console.log(articleTxt.length);
       console.log(selStart);
@@ -716,6 +823,9 @@ const ArticleSite = () => {
       txtAr.current.style.height = 25 + txtAr.current.scrollHeight + 'px';
       txtAr.current.selectionStart = selStart;
       txtAr.current.selectionEnd = selStart;
+      // if (typedNumber !== scrollOffset.current.scrollTop) {
+      //   scrollOffset.current.scrollTop = typedNumber;
+      // }
     }
   }, [articleTxt]);
   useEffect(() => {
@@ -752,7 +862,12 @@ const ArticleSite = () => {
       }
     }
   }, [selStart]);
+
   const getEnters = (e) => {
+    alert('enter');
+    setTypedNumber(scrollOffset.current.scrollTop);
+    setTyped(true);
+    // setTypedNumber(scrollOffset.current.scrollTop);
     if (e.which === 8) {
       setBackspace(true);
     }
@@ -764,9 +879,6 @@ const ArticleSite = () => {
       if (txtAr.current.selectionStart === txtAr.current.value.length) {
         setArticleTxt(strX);
       } else if (txtAr.current.selectionStart < txtAr.current.value.length) {
-        alert(txtAr.current.selectionStart);
-        alert(txtAr.current.value.length);
-        console.log(txtAr.current.value.split(''));
         const newArr = txtAr.current.value.split('');
         newArr.splice(txtAr.current.selectionStart, 0, '\n');
         newArr.splice(txtAr.current.selectionStart, 0, '\n');
@@ -800,6 +912,7 @@ const ArticleSite = () => {
       //   setArticleTxt(newArr.join(''));
       // }
     } else {
+      setPrevLength(txtAr.current.value.length);
       setEnter(false);
       setArrived(false);
       const slNm = txtAr.current.selectionStart;
@@ -809,7 +922,6 @@ const ArticleSite = () => {
         txtAr.current.value[slNm + 1] !== '\n'
       ) {
         setInbetween(true);
-        alert('yes');
       } else {
         setInbetween(false);
       }
@@ -830,7 +942,7 @@ const ArticleSite = () => {
           console.log(strArr[i - 2]); // i-1 curr typed letter
           console.log(strArr[i]);
           if (strArr[i - 2] === '\n' && strArr[i] === '\n') {
-            alert(strArr[i - 1]); // starri-1 = curr typed letter i === cur space where next letter will be typed
+            // starri-1 = curr typed letter i === cur space where next letter will be typed
             strArr.splice(i - 1, 0, '\n');
             strArr.splice(i + 1, 0, '\n');
           }
@@ -1384,7 +1496,19 @@ const ArticleSite = () => {
             ) : null}
           </div>
         </div>
-        <div id={s.articleText} onScroll={handleScroll} ref={scrollOffset}>
+        <div
+          id={s.articleText}
+          ref={scrollOffset}
+          onScroll={() => {
+            if (typed3) {
+              scrollOffset.current.scrollTop = typedNumber;
+              // setTimeout(() => {
+              //   setTyped3(false);
+              // }, 30);
+            }
+            alert('mkay');
+          }}
+        >
           <ul id={s.articleOpts}>
             <li>About</li>
             <li

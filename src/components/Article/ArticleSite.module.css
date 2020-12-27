@@ -420,7 +420,6 @@
   position: absolute;
   width: 42rem;
   height: 40rem;
-  background-color: #fff;
   top: 55%;
   left: 50%;
   transform: translateX(-45.5%);
@@ -1587,7 +1586,6 @@ img {
     position: absolute;
     width: 57rem;
     height: 50rem;
-    background-color: #fff;
     top: 55%;
     left: 50%;
     transform: translateX(-45.5%);
@@ -1690,7 +1688,6 @@ img {
     position: absolute;
     width: 30rem;
     height: 30rem;
-    background-color: #fff;
     top: 65%;
     left: 50%;
     transform: translateX(-45.5%);
